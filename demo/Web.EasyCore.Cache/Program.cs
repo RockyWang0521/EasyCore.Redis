@@ -4,6 +4,7 @@ using EasyCore.ServiceCache;
 using EasyCore.Cache;
 using RedisTest.Cache;
 using RedisTest.Lock;
+using RedisTest.Transaction;
 
 namespace Web.EasyCore.Cache
 {
@@ -30,6 +31,8 @@ namespace Web.EasyCore.Cache
 
             // Dependency Injection
             builder.Services.AddSingleton<IRedisCache, RedisCache>();
+
+            builder.Services.AddSingleton<IRedisTransaction, RedisTransaction>();
 
             #endregion
 

@@ -104,5 +104,8 @@ namespace EasyCore.DistributedCache.Cache
 
         public bool KeyExists(string key, CancellationToken token = default)
             => _database.KeyExists(GetCacheKey(key));
+
+        public ITransaction GetTransaction()
+            => _database.CreateTransaction();
     }
 }

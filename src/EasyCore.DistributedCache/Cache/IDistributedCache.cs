@@ -1,4 +1,6 @@
-﻿namespace EasyCore.DistributedCache.Cache
+﻿using StackExchange.Redis;
+
+namespace EasyCore.DistributedCache.Cache
 {
     public interface IDistributedCache
     {
@@ -101,5 +103,11 @@
         /// <param name="token"></param>
         /// <returns></returns>
         bool KeyExists(string key, CancellationToken token = default(CancellationToken));
+
+        /// <summary>
+        /// 获取事务
+        /// </summary>
+        /// <returns></returns>
+        ITransaction GetTransaction();
     }
 }
