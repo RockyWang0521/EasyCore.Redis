@@ -1,0 +1,6 @@
+@Web.EasyCore.Cache_HostAddress = http://localhost:5294
+
+GET {{Web.EasyCore.Cache_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

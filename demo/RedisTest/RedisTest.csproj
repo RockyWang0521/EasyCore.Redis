@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\EasyCore.DistributedCache\EasyCore.DistributedCache.csproj" />
+    <ProjectReference Include="..\..\src\EasyCore.DistributedLocking\EasyCore.DistributedLocking.csproj" />
+    <ProjectReference Include="..\..\src\EasyCore.ServiceCache\EasyCore.ServerCache.csproj" />
+  </ItemGroup>
+
+</Project>
