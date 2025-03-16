@@ -1,0 +1,1 @@
+# EasyCore.Cache
