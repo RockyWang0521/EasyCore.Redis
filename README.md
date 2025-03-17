@@ -59,6 +59,35 @@ EasyCore.Cache提供对Redis的支持：
     }
 ```
 
+1.3 使用分布式事务
+
+```
+    public class RedisTransaction : IRedisTransaction
+    {
+        private readonly IDistributedTransaction _transaction;
+
+        private readonly IDistributedCache _cache;
+
+        public RedisTransaction(IDistributedTransaction transaction,
+            IDistributedCache cache)
+        {
+            _transaction = transaction;
+            _cache = cache;
+        }
+
+        public async Task Transaction()
+        {
+            using (var tran = _transaction.CreateTransaction())
+            {
+                _cache.Set("key1", "value1");
+                _cache.Set("key2", "value2");
+                _cache.Set("key3", "value3");
+                await tran.CommitAsync();
+            }
+        }
+    }
+```
+
 EasyCoreDistributedCache提供了大量的api，如写入值、读取值、布隆过滤器等。
 
 2. 分布式锁(DistributedLock)
