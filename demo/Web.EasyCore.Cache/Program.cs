@@ -61,6 +61,8 @@ namespace Web.EasyCore.Cache
 
             #region EasyCoreCache
 
+            builder.Services.AddSingleton<IRedisTransaction, RedisTransaction>();
+
             builder.Services.AddSingleton<IRedisCache, RedisCache>();
 
             builder.Services.AddSingleton<IRedisLock, RedisLock>();
