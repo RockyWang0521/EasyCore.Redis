@@ -32,7 +32,7 @@ namespace Web.EasyCore.Cache
             // Dependency Injection
             builder.Services.AddSingleton<IRedisCache, RedisCache>();
 
-            builder.Services.AddSingleton<IRedisTransaction, RedisTransaction>();
+            builder.Services.AddTransient<IRedisTransaction, RedisTransaction>();
 
             #endregion
 
@@ -61,7 +61,7 @@ namespace Web.EasyCore.Cache
 
             #region EasyCoreCache
 
-            builder.Services.AddSingleton<IRedisTransaction, RedisTransaction>();
+            builder.Services.AddTransient<IRedisTransaction, RedisTransaction>();
 
             builder.Services.AddSingleton<IRedisCache, RedisCache>();
 
