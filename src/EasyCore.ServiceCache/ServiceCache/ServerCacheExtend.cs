@@ -11,7 +11,7 @@ namespace EasyCore.ServiceCache
     {
         public static void EasyCoreServerCache(this IServiceCollection service)
         {
-            service.TryAddScoped<IAsyncInterceptor, ServerCacheStandardInterceptor>();
+            service.AddScoped<IAsyncInterceptor, ServerCacheStandardInterceptor>();
 
             service.TryAddSingleton<ProxyGenerator>();
 
