@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace EasyCore.ServiceCache.ServiceCache.CacheAttribute
+﻿namespace EasyCore.ServiceCache.ServiceCache.CacheAttribute
 {
     /// <summary>
     /// 服务缓存特性

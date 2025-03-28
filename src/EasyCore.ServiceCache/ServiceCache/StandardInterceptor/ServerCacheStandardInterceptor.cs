@@ -1,14 +1,8 @@
 ﻿using Castle.DynamicProxy;
 using EasyCore.DistributedCache.Cache;
 using EasyCore.ServiceCache.ServiceCache.CacheAttribute;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EasyCore.ServiceCache.ServiceCache.StandardInterceptor
 {
