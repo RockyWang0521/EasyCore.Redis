@@ -7,7 +7,7 @@ namespace EasyCore.DistributedCache
 {
     public static class DistributedCacheExtend
     {
-        public static void EasyCoreDistributedCache(this IServiceCollection service, Action<DistributedCacheOption> action)
+        public static void EasyCoreDistributedCache(this IServiceCollection service, Action<DistributedOption> action)
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));

@@ -10,9 +10,33 @@ namespace EasyCore.Cache
     {
         public static void EasyCoreCache(this IServiceCollection service, Action<DistributedOption> action)
         {
-            service.EasyCoreDistributedCache(action);
+            var cacheOptions = new DistributedOption();
 
-            service.EasyCoreDistributedLock(action);
+            action(cacheOptions);
+
+            service.EasyCoreDistributedCache(options =>
+            {
+                options.AbortOnConnectFail   = cacheOptions.AbortOnConnectFail;
+                options.ConnectTimeout      = cacheOptions.ConnectTimeout;
+                options.DefaultDatabase     = cacheOptions.DefaultDatabase;
+                options.DistributedName = cacheOptions.DistributedName;
+                options.EndPoints           = cacheOptions.EndPoints;
+                options.Password = cacheOptions.Password;
+                options.SyncTimeout         = cacheOptions.SyncTimeout;
+                options.User            = cacheOptions.User;
+            });
+
+            service.EasyCoreDistributedLock(options =>
+            {
+                options.AbortOnConnectFail = cacheOptions.AbortOnConnectFail;
+                options.ConnectTimeout = cacheOptions.ConnectTimeout;
+                options.DefaultDatabase = cacheOptions.DefaultDatabase;
+                options.DistributedName = cacheOptions.DistributedName;
+                options.EndPoints = cacheOptions.EndPoints;
+                options.Password = cacheOptions.Password;
+                options.SyncTimeout = cacheOptions.SyncTimeout;
+                options.User = cacheOptions.User;
+            });
 
             service.EasyCoreServerCache();
         }

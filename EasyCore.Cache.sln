@@ -17,9 +17,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Web.EasyCore.Cache", "demo\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasyCore.DistributedLocking", "src\EasyCore.DistributedLocking\EasyCore.DistributedLocking.csproj", "{3E981C74-AC14-4D98-8D1F-18291082CD1B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasyCore.ServerCache", "src\EasyCore.ServiceCache\EasyCore.ServerCache.csproj", "{D79C543D-AF38-44FA-BEEF-44F133029F20}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasyCore.CacheOptions", "src\EasyCore.CacheOptions\EasyCore.CacheOptions.csproj", "{1152D29F-96B3-404E-A60D-3F1A0921D09C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EasyCore.ServerCache", "src\EasyCore.ServiceCache\EasyCore.ServerCache.csproj", "{D79C543D-AF38-44FA-BEEF-44F133029F20}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,10 +49,6 @@ Global
 		{D79C543D-AF38-44FA-BEEF-44F133029F20}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D79C543D-AF38-44FA-BEEF-44F133029F20}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D79C543D-AF38-44FA-BEEF-44F133029F20}.Release|Any CPU.Build.0 = Release|Any CPU
-		{1152D29F-96B3-404E-A60D-3F1A0921D09C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{1152D29F-96B3-404E-A60D-3F1A0921D09C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{1152D29F-96B3-404E-A60D-3F1A0921D09C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{1152D29F-96B3-404E-A60D-3F1A0921D09C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -66,7 +60,6 @@ Global
 		{B9CE33F4-4AE1-4AA7-BA6F-567F4D4D99DE} = {F66E7F1A-F8DF-4F76-A146-38284ED50E82}
 		{3E981C74-AC14-4D98-8D1F-18291082CD1B} = {422AE754-B427-4778-9485-FF04D19F49EA}
 		{D79C543D-AF38-44FA-BEEF-44F133029F20} = {422AE754-B427-4778-9485-FF04D19F49EA}
-		{1152D29F-96B3-404E-A60D-3F1A0921D09C} = {422AE754-B427-4778-9485-FF04D19F49EA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {30827D33-4F6E-4588-8C6D-A00B5491414F}

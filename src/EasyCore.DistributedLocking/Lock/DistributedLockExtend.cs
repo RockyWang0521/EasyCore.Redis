@@ -6,7 +6,7 @@ namespace EasyCore.DistributedLocking
 {
     public static class DistributedLockExtend
     {
-        public static void EasyCoreDistributedLock(this IServiceCollection service, Action<DistributedLockOption> action)
+        public static void EasyCoreDistributedLock(this IServiceCollection service, Action<DistributedOption> action)
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));

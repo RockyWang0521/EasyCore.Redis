@@ -20,14 +20,14 @@ namespace Web.EasyCore.Cache
 
             #region Redis Cache
 
-            // Add EasyCore.Cache
-            builder.Services.EasyCoreDistributedCache(options =>
-            {
-                options.EndPoints = new List<string> { "192.168.157.142:6379" };
-                options.ConnectTimeout = 100;
-                options.SyncTimeout = 100;
-                options.DistributedName = "Web.EasyCore.Cache";
-            });
+            //// Add EasyCore.Cache
+            //builder.Services.EasyCoreDistributedCache(options =>
+            //{
+            //    options.EndPoints = new List<string> { "192.168.157.142:6379" };
+            //    options.ConnectTimeout = 100;
+            //    options.SyncTimeout = 100;
+            //    options.DistributedName = "Web.EasyCore.Cache";
+            //});
 
             // Dependency Injection
             builder.Services.AddSingleton<IRedisCache, RedisCache>();
@@ -38,14 +38,14 @@ namespace Web.EasyCore.Cache
 
             #region Redis Lock
 
-            // Add EasyCore.Lock
-            builder.Services.EasyCoreDistributedLock(options =>
-            {
-                options.EndPoints = new List<string> { "192.168.157.142:6379" };
-                options.ConnectTimeout = 100;
-                options.SyncTimeout = 100;
-                options.DistributedName = "Web.EasyCore.Cache";
-            });
+            //// Add EasyCore.Lock
+            //builder.Services.EasyCoreDistributedLock(options =>
+            //{
+            //    options.EndPoints = new List<string> { "192.168.157.142:6379" };
+            //    options.ConnectTimeout = 100;
+            //    options.SyncTimeout = 100;
+            //    options.DistributedName = "Web.EasyCore.Cache";
+            //});
 
             // Dependency Injection
             builder.Services.AddSingleton<IRedisLock, RedisLock>();
@@ -54,8 +54,8 @@ namespace Web.EasyCore.Cache
 
             #region ServerCache
 
-            // Add EasyCore.ServerCache
-            builder.Services.EasyCoreServerCache();
+            //// Add EasyCore.ServerCache
+            //builder.Services.EasyCoreServerCache();
 
             #endregion
 

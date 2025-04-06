@@ -31,7 +31,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\EasyCore.CacheOptions\EasyCore.CacheOptions.csproj" />
     <ProjectReference Include="..\EasyCore.DistributedLocking\EasyCore.DistributedLocking.csproj" />
     <ProjectReference Include="..\EasyCore.ServiceCache\EasyCore.ServerCache.csproj" />
   </ItemGroup>

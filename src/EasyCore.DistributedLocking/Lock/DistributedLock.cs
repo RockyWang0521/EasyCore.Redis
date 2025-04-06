@@ -8,7 +8,7 @@ namespace EasyCore.DistributedLocking.Lock
 {
     public class DistributedLock : IDistributedLock
     {
-        private readonly DistributedLockOption _option;
+        private readonly DistributedOption _option;
         private readonly ILogger<DistributedLock> _logger;
         private ConnectionMultiplexer? _redis;
         private ConfigurationOptions _configurationOptions;
@@ -40,7 +40,7 @@ namespace EasyCore.DistributedLocking.Lock
         /// DistributedLock
         /// </summary>
         /// <param name="redisServiceOption"></param>
-        public DistributedLock(IOptions<DistributedLockOption> redisServiceOption, ILogger<DistributedLock> logger)
+        public DistributedLock(IOptions<DistributedOption> redisServiceOption, ILogger<DistributedLock> logger)
         {
             _logger = logger;
 

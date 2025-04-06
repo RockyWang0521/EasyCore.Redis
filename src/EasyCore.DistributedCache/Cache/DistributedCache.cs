@@ -6,11 +6,11 @@ namespace EasyCore.DistributedCache.Cache
 {
     public class DistributedCache : IDistributedCache
     {
-        private readonly DistributedCacheOption _option;
+        private readonly DistributedOption _option;
         private readonly ConnectionMultiplexer _redis;
         private readonly IDatabase _database;
 
-        public DistributedCache(IOptions<DistributedCacheOption> options)
+        public DistributedCache(IOptions<DistributedOption> options)
         {
             _option = options.Value ?? throw new ArgumentNullException(nameof(options));
 
