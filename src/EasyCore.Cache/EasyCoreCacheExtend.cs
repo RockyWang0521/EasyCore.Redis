@@ -1,6 +1,5 @@
 ﻿using EasyCore.DistributedCache;
 using EasyCore.DistributedLocking;
-using EasyCore.CacheOptions;
 using EasyCore.ServiceCache;
 using Microsoft.Extensions.DependencyInjection;
 
