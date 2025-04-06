@@ -10,7 +10,7 @@
     <IncludeSymbols>False</IncludeSymbols>
     <RepositoryType>gitee</RepositoryType>
     <Authors>WZHY</Authors>
-    <Description>.net core hot data caching, distributed lock, cache reading and writing.</Description>
+    <Description>.net core cache reading and writing.</Description>
     <PackageProjectUrl>https://gitee.com/wzhy-0521/easy-core.-cache.git</PackageProjectUrl>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <PackageLicenseExpression>MIT OR Apache-2.0</PackageLicenseExpression>
