@@ -22,6 +22,7 @@ namespace EasyCore.DistributedLocking.Lock
                                                      return 1
                                                   end
                                                   return 0";
+
         const string lockscript = @"local isNX = redis.call('SETNX', KEYS[1], ARGV[1])
                                                      if isNX == 1 then
                                                         redis.call('PEXPIRE', KEYS[1], ARGV[2])
@@ -65,7 +66,6 @@ namespace EasyCore.DistributedLocking.Lock
 
         private string GetLockName(string key)
             => $"{_option.DistributedName}:{key}";
-
 
         #region 分布式锁
 
