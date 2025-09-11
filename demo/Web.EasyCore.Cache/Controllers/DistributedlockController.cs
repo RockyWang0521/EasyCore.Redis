@@ -8,40 +8,51 @@ namespace Web.EasyCore.Cache.Controllers
     [ApiController]
     public class DistributedlockController : ControllerBase
     {
-        private readonly IRedisLock _rlock;
+        private readonly IRedisLock _iRedisLock;
 
-        public DistributedlockController(IRedisLock rlock) => _rlock = rlock;
+        public DistributedlockController(IRedisLock iRedisLock) => _iRedisLock = iRedisLock;
 
-        [HttpGet("AcquireLock")]
-        public async Task<string> GetAcquireLock()
+        [HttpGet("UsingAcquireLockAsync")]
+        public async Task UsingAcquireLockAsync()
         {
-            if (!await _rlock.AcquireLock("AcquireLock", Guid.NewGuid(), 100))
-                return await Task.FromResult("未抢到非阻塞锁");
-
-            return await Task.FromResult("抢到非阻塞锁");
+            await _iRedisLock.UsingAcquireLockAsync("UsingAcquireLockAsync", 100);
         }
 
-        [HttpGet("BlockingLock")]
-        public async Task<string> GetBlockingLock()
+        [HttpGet("AcquireLockAsync")]
+        public async Task AcquireLockAsync()
         {
-            if (!await _rlock.BlockingLock("Blocking", Guid.NewGuid(), 10, 100))
-                return await Task.FromResult("未抢到阻塞锁");
-
-            return await Task.FromResult("抢到阻塞锁");
+            await _iRedisLock.AcquireLockAsync("AcquireLockAsync", 100);
         }
 
-        [HttpGet("Renewable")]
-        public async Task GetRenewableLock()
+        [HttpGet("UsingBlockingLockAsync")]
+        public async Task UsingBlockingLockAsync()
         {
-            var lockId = Guid.NewGuid();
-            if (await _rlock.RenewableBlockingLock("Renewable", lockId, 10, 8, 20))
-            {
-                //模拟一个非常耗时的操作
-                await Task.Delay(15000);
+            await _iRedisLock.UsingBlockingLockAsync("UsingBlockingLockAsync", 100, 100);
+        }
 
-                await _rlock.UnLock("Renewable", lockId);
-            }
-            await Task.CompletedTask;
+
+        [HttpGet("BlockingLockAsync")]
+        public async Task BlockingLockAsync()
+        {
+            await _iRedisLock.BlockingLockAsync("BlockingLockAsync", 100, 100);
+        }
+
+        [HttpGet("UsingRenewableBlockingLockAsync")]
+        public async Task UsingRenewableBlockingLockAsync()
+        {
+            await _iRedisLock.UsingRenewableBlockingLockAsync("UsingRenewableBlockingLockAsync", 10, 8, 20);
+        }
+
+        [HttpGet("RenewableBlockingLockAsync")]
+        public async Task RenewableBlockingLockAsync()
+        {
+            await _iRedisLock.RenewableBlockingLockAsync("RenewableBlockingLockAsync", 10, 8, 20);
+        }
+
+        [HttpGet("UsingBlockingLockTestAsync")]
+        public async Task UsingBlockingLockTestAsync()
+        {
+            await _iRedisLock.UsingBlockingLockTestAsync("UsingBlockingLockAsync", 1000, 1000);
         }
     }
 }

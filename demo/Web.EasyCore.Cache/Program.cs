@@ -69,7 +69,7 @@ namespace Web.EasyCore.Cache
 
             builder.Services.EasyCoreCache(options =>
             {
-                options.EndPoints = new List<string> { "192.168.157.142:6379" };
+                options.EndPoints = new List<string> { "localhost:6379" };
                 options.ConnectTimeout = 100;
                 options.SyncTimeout = 100;
                 options.DistributedName = "Web.EasyCore.Cache";

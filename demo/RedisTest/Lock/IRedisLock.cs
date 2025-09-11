@@ -8,12 +8,30 @@ namespace RedisTest.Lock
 {
     public interface IRedisLock
     {
-        Task<bool> AcquireLock(string key, Guid lockId, int seconds);
+        Task UsingAcquireLockAsync(string key, int seconds);
 
-        Task<bool> BlockingLock(string key, Guid lockId, int seconds, int blockingSeconds);
+        void UsingAcquireLock(string key, int seconds);
 
-        Task<bool> RenewableBlockingLock(string key, Guid lockId, int seconds, int blockingSeconds, int renewalSeconds);
+        Task AcquireLockAsync(string key, int seconds);
 
-        Task<bool> UnLock (string key, Guid lockId);
+        void AcquireLock(string key, int seconds);
+
+        Task UsingBlockingLockAsync(string key, int seconds, int blockingSeconds);
+
+        void UsingBlockingLock(string key, int seconds, int blockingSeconds);
+
+        Task BlockingLockAsync(string key, int seconds, int blockingSeconds);
+
+        void BlockingLock(string key, int seconds, int blockingSeconds);
+
+        Task UsingRenewableBlockingLockAsync(string key, int seconds, int blockingSeconds, int renewalSeconds);
+
+        void UsingRenewableBlockingLock(string key, int seconds, int blockingSeconds, int renewalSeconds);
+
+        Task RenewableBlockingLockAsync(string key, int seconds, int blockingSeconds, int renewalSeconds);
+
+        void RenewableBlockingLock(string key, int seconds, int blockingSeconds, int renewalSeconds);
+
+        Task UsingBlockingLockTestAsync(string key, int seconds, int blockingSeconds);
     }
 }
