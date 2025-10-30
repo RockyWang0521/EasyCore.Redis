@@ -107,27 +107,145 @@ EasyCoreDistributedCache提供了大量的api，如写入值、读取值、布�
 2.2 使用分布式锁
 
 ```
-  public class RedisLock : IRedisLock
-  {
-      private readonly IDistributedLock _lock;
+    private readonly IDistributedLock _lock;
 
-      public RedisLock(IDistributedLock locke) => _lock = locke;
+    public RedisLock(IDistributedLock locke) => _lock = locke;
 
-      public async Task<bool> AcquireLock(string key, Guid lockId, int seconds) =>
-           await _lock.AcquireLockAsync(key, lockId, 100);
+    public async Task UsingAcquireLockAsync(string key, int seconds)
+    {
+        using var context = await _lock.AcquireLockAsync(key, 100);
 
-      public async Task<bool> BlockingLock(string key, Guid lockId, int seconds, int blockingSeconds) =>
-          await _lock.BlockingLockAsync(key, lockId, seconds, blockingSeconds);
+        if (context.IsAcquired)
+        {
+            Console.WriteLine($"Lock acquired for {context.Key}---{context.LockId}");
+        }
+    }
 
-      public async Task<bool> RenewableBlockingLock(string key, Guid lockId, int seconds, int blockingSeconds, int renewalSeconds) =>
-          await _lock.BlockingLockAsync(key, lockId, seconds, blockingSeconds, renewalSeconds);
+    public void UsingAcquireLock(string key, int seconds)
+    {
+        using var context = _lock.AcquireLock(key, 100);
 
-      public async Task<bool> UnLock(string key, Guid lockId) => 
-          await _lock.UnLockAsync(key, lockId);
-  }
+        if (context.IsAcquired)
+        {
+            Console.WriteLine($"Lock acquired for {context.Key}---{context.LockId}");
+        }
+    }
+
+    public async Task AcquireLockAsync(string key, int seconds)
+    {
+        var context = await _lock.AcquireLockAsync(key, 100);
+
+        if (context.IsAcquired)
+        {
+            Console.WriteLine($"Lock acquired for {context.Key}---{context.LockId}");
+        }
+
+        await _lock.UnLockAsync(context);
+    }
+
+    public void AcquireLock(string key, int seconds)
+    {
+        var context = _lock.AcquireLock(key, 100);
+
+        if (context.IsAcquired)
+        {
+            Console.WriteLine($"Lock acquired for {context.Key}---{context.LockId}");
+        }
+
+        _lock.UnLock(context);
+    }
+
+    public async Task UsingBlockingLockAsync(string key, int seconds, int blockingSeconds)
+    {
+        using var context = await _lock.BlockingLockAsync(key, seconds, blockingSeconds);
+
+        if (context.IsAcquired)
+        {
+            Console.WriteLine($"Lock acquired for {context.Key}---{context.LockId}");
+        }
+    }
+
+    public void UsingBlockingLock(string key, int seconds, int blockingSeconds)
+    {
+        using var context = _lock.BlockingLock(key, seconds, blockingSeconds);
+
+        if (context.IsAcquired)
+        {
+            Console.WriteLine($"Lock acquired for {context.Key}---{context.LockId}");
+        }
+    }
+
+    public async Task BlockingLockAsync(string key, int seconds, int blockingSeconds)
+    {
+        var context = await _lock.BlockingLockAsync(key, seconds, blockingSeconds);
+
+        if (context.IsAcquired)
+        {
+            Console.WriteLine($"Lock acquired for {context.Key}---{context.LockId}");
+        }
+
+        await _lock.UnLockAsync(context);
+    }
+
+    public void BlockingLock(string key, int seconds, int blockingSeconds)
+    {
+        var context = _lock.BlockingLock(key, seconds, blockingSeconds);
+
+        if (context.IsAcquired)
+        {
+            Console.WriteLine($"Lock acquired for {context.Key}---{context.LockId}");
+        }
+
+        _lock.UnLock(context);
+    }
+
+    public async Task UsingRenewableBlockingLockAsync(string key, int seconds, int blockingSeconds, int renewalSeconds)
+    {
+        using var context = await _lock.BlockingLockAsync(key, seconds, blockingSeconds, renewalSeconds);
+
+        if (context.IsAcquired)
+        {
+            Console.WriteLine($"Lock acquired for {context.Key}---{context.LockId}");
+        }
+    }
+
+    public void UsingRenewableBlockingLock(string key, int seconds, int blockingSeconds, int renewalSeconds)
+    {
+        using var context = _lock.BlockingLock(key, seconds, blockingSeconds, renewalSeconds);
+
+        if (context.IsAcquired)
+        {
+            Console.WriteLine($"Lock acquired for {context.Key}---{context.LockId}");
+        }
+    }
+
+    public async Task RenewableBlockingLockAsync(string key, int seconds, int blockingSeconds, int renewalSeconds)
+    {
+        var context = await _lock.BlockingLockAsync(key, seconds, blockingSeconds, renewalSeconds);
+
+        if (context.IsAcquired)
+        {
+            Console.WriteLine($"Lock acquired for {context.Key}---{context.LockId}");
+        }
+
+        _lock.UnLock(context);
+    }
+
+    public void RenewableBlockingLock(string key, int seconds, int blockingSeconds, int renewalSeconds)
+    {
+        var context = _lock.BlockingLock(key, seconds, blockingSeconds, renewalSeconds);
+
+        if (context.IsAcquired)
+        {
+            Console.WriteLine($"Lock acquired for {context.Key}---{context.LockId}");
+        }
+
+        _lock.UnLock(context);
+    }
+}
 ```
 
-EasyCoreDistributedLock提供了非阻塞锁、阻塞锁以及红锁的api。
+EasyCoreDistributedLock提供了非阻塞锁、阻塞锁的api。支持using使用或直接调用获取锁，直接调用获取锁时最后一定要释放锁。
 
 3. 服务缓存(ServerCache)
 
