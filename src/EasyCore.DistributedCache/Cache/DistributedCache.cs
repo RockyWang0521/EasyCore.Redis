@@ -41,7 +41,7 @@ namespace EasyCore.DistributedCache.Cache
 
         public T? Get<T>(string key)
         {
-            var value = _database.StringGet(GetCacheKey(key));
+            var value = _database.HashGet(GetCacheKey(key), key);
             return value.IsNullOrEmpty ? default : JsonConvert.DeserializeObject<T>(value!);
         }
 
