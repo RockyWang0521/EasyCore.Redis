@@ -1,303 +1,202 @@
-# EasyCore.Cache
+# EasyCore.Redis
 
-Redis（Remote Dictionary Server）是一个开源的，基于内存存储的键值型NoSQL数据库，其具备丰富的数据结构、原子操作、持久化机制和主从复制等功能。
+Production-ready Redis toolkit for .NET 8: **distributed cache**, **distributed lock**, and **service-level (AOP) result caching**.
 
-Redis的特点：
+> Future Elasticsearch packages will use `EasyCore.Elasticsearch.*`, so Redis and ES stay clearly separated.
 
-高性能：Redis是完全在内存中运行的，数据读写速度非常快，每秒可以执行数十万次读写操作，是传统关系型数据库的数倍。
+| Package | Role |
+|---------|------|
+| `EasyCore.Redis` | Meta package ? registers all features |
+| `EasyCore.Redis.Distributed` | Redis KV cache + MULTI/EXEC transactions |
+| `EasyCore.Redis.Locking` | Redis distributed lock (SET NX PX + Lua unlock) |
+| `EasyCore.Redis.Service` | `[ServerCache]` method result caching via Castle |
 
-数据持久化：虽然Redis主要驻留在内存中，但它也提供了一些策略来将数据持久化到磁盘上，以防服务器突然断电导致数据丢失。主要有两种方式，一种是RDB(快照)，另一种是AOF(日志)。
+**Version:** 9.0.0 (breaking changes from 8.x ? see below)
 
-支持主从复制：Redis支持多个副本，可以进行数据备份和负载均衡，提高系统的可用性。
+---
 
-多种数据类型：Redis支持丰富的数据类型，包括字符串、哈希、列表、集合、有序集合等，这使得它可以用于各种场景。
+## Quick start
 
-事务处理：Redis支持简单的事务操作，可以在一次命令执行中完成多个操作，保证了操作的原子性。
+```csharp
+// From code
+builder.Services.EasyCoreRedis(options =>
+{
+    options.EndPoints = new List<string> { "127.0.0.1:6379" };
+    options.ConnectTimeout = TimeSpan.FromSeconds(5);
+    options.SyncTimeout = TimeSpan.FromSeconds(5);
+    options.DistributedName = "MyApp";
+},
+serverCache => serverCache.Assemblies.Add(typeof(MyService).Assembly));
 
-发布/订阅：Redis内置了发布/订阅功能，可以作为消息队列使用，实现进程间通信。
-
-Redis的使用场景：
-
-缓存：由于Redis的操作速度快，常被用作Web应用的缓存系统，减轻数据库的压力。
-
-计数器：例如网站的访问量统计，用户的点赞、收藏等操作计数。
-
-排行榜：利用有序集合的特性，可以方便地实现动态更新的排行榜。
-
-消息队列：通过Redis的发布/订阅功能，可以构建消息队列系统，实现异步处理任务。
-
-分布式锁：在分布式系统中，Redis可以用来实现分布式锁。
-
-随着云计算和大数据的发展，Redis也在不断进化。例如，Redis Cluster提供了一种无中心节点的分布式解决方案，可以自动处理数据分区和故障恢复。另外，Redis 6引入了多线程模型，进一步提高了性能。同时，社区也在开发更多的插件和扩展，如RediSearch（全文搜索）和RedisGears（脚本处理）等，使得Redis能更好地服务于各种复杂的业务需求。
-
-EasyCore.Cache提供对Redis的支持：
-
-1. 分布式缓存(DistributedCache)
-
-1.1 注册EasyCoreDistributedCache
-
-```
-   builder.Services.EasyCoreDistributedCache(options =>
-   {
-       options.EndPoints = new List<string> { "192.168.157.142:6379" };
-       options.ConnectTimeout = 100;
-       options.SyncTimeout = 100;
-       options.DistributedName = "Web.EasyCore.Cache";
-   });
+// Or from appsettings.json
+builder.Services.EasyCoreRedis(
+    builder.Configuration.GetSection("EasyCore:Redis"),
+    serverCache => serverCache.Assemblies.Add(typeof(MyService).Assembly));
 ```
 
-1.2 使用分布式缓存
-
-```
-   public class RedisCache : IRedisCache
-   {
-       private readonly IDistributedCache _cache;
-
-       public RedisCache(IDistributedCache cache) => _cache = cache;
-
-       public async Task<string?> GetAsync(string key) => await _cache.GetAsync(key);   
+```json
+{
+  "EasyCore": {
+    "Cache": {
+      "EndPoints": [ "127.0.0.1:6379" ],
+      "ConnectTimeout": "00:00:05",
+      "SyncTimeout": "00:00:05",
+      "DistributedName": "MyApp"
     }
-```
-
-1.3 使用分布式事务
-
-```
-    public class RedisTransaction : IRedisTransaction
-    {
-        private readonly IDistributedTransaction _transaction;
-
-        private readonly IDistributedCache _cache;
-
-        public RedisTransaction(IDistributedTransaction transaction,
-            IDistributedCache cache)
-        {
-            _transaction = transaction;
-            _cache = cache;
-        }
-
-        public async Task Transaction()
-        {
-            using (var tran = _transaction.CreateTransaction())
-            {
-                _cache.Set("key1", "value1");
-                _cache.Set("key2", "value2");
-                _cache.Set("key3", "value3");
-                await tran.CommitAsync();
-            }
-        }
-    }
+  }
+}
 ```
 
-EasyCoreDistributedCache提供了大量的api，如写入值、读取值、布隆过滤器等。
+Or register features separately:
 
-2. 分布式锁(DistributedLock)
-
-2.1 注册EasyCoreDistributedLock
-
-```
-   builder.Services.EasyCoreDistributedLock(options =>
-   {
-       options.EndPoints = new List<string> { "192.168.157.142:6379" };
-       options.ConnectTimeout = 100;
-       options.SyncTimeout = 100;
-       options.DistributedName = "Web.EasyCore.Cache";
-   });
+```csharp
+builder.Services.EasyCoreRedisDistributed(o => { /* ... */ });
+builder.Services.EasyCoreRedisLock();          // reuses shared connection
+builder.Services.EasyCoreRedisService(o => o.Assemblies.Add(...));
+// or: builder.Services.AddServerCacheProxy<IMyService, MyService>();
 ```
 
-2.2 使用分布式锁
+---
 
+## 1. Distributed cache
+
+Access five Redis data types via `IDistributedCache`:
+
+```csharp
+IDistributedCache cache;
+
+// String
+await cache.String.SetAsync("user:1", "alice", seconds: 60);
+var name = await cache.String.GetAsync("user:1");
+await cache.String.IncrementAsync("counter");
+
+// Hash
+await cache.Hash.SetAsync("user:1:profile", "age", "18");
+await cache.Hash.SetAsync("user:1:profile", new Dictionary<string, string>
+{
+    ["name"] = "alice",
+    ["city"] = "SH"
+}, seconds: 300);
+var profile = await cache.Hash.GetAllAsync("user:1:profile");
+
+// List
+await cache.List.RightPushAsync("queue", cancellationToken: default, "a", "b", "c");
+var items = await cache.List.RangeAsync("queue"); // 0..-1
+
+// Set
+await cache.Set.AddAsync("tags", cancellationToken: default, "redis", "cache");
+var tags = await cache.Set.GetMembersAsync("tags");
+
+// Sorted Set (ZSet)
+await cache.SortedSet.AddAsync("rank", "alice", 100);
+var top = await cache.SortedSet.RangeByRankWithScoresAsync("rank", 0, 9, ascending: false);
 ```
-    private readonly IDistributedLock _lock;
 
-    public RedisLock(IDistributedLock locke) => _lock = locke;
+Shortcut APIs `cache.GetAsync` / `cache.SetAsync` still map to **String** for compatibility.
 
-    public async Task UsingAcquireLockAsync(string key, int seconds)
+- Keys are prefixed with `DistributedName` (e.g. `MyApp:user:1`).
+- Also: `KeyExists` / `KeyType` / `KeyTimeToLive` / `Refresh` / `Remove`.
+
+### Transactions (MULTI/EXEC)
+
+Queue writes on the transaction object, then commit. Disposing **without** commit does **not** execute.
+
+```csharp
+public class RedisTransaction(IDistributedTransaction transactions)
+{
+    public async Task RunAsync()
     {
-        using var context = await _lock.AcquireLockAsync(key, 100);
-
-        if (context.IsAcquired)
-        {
-            Console.WriteLine($"Lock acquired for {context.Key}---{context.LockId}");
-        }
-    }
-
-    public void UsingAcquireLock(string key, int seconds)
-    {
-        using var context = _lock.AcquireLock(key, 100);
-
-        if (context.IsAcquired)
-        {
-            Console.WriteLine($"Lock acquired for {context.Key}---{context.LockId}");
-        }
-    }
-
-    public async Task AcquireLockAsync(string key, int seconds)
-    {
-        var context = await _lock.AcquireLockAsync(key, 100);
-
-        if (context.IsAcquired)
-        {
-            Console.WriteLine($"Lock acquired for {context.Key}---{context.LockId}");
-        }
-
-        await _lock.UnLockAsync(context);
-    }
-
-    public void AcquireLock(string key, int seconds)
-    {
-        var context = _lock.AcquireLock(key, 100);
-
-        if (context.IsAcquired)
-        {
-            Console.WriteLine($"Lock acquired for {context.Key}---{context.LockId}");
-        }
-
-        _lock.UnLock(context);
-    }
-
-    public async Task UsingBlockingLockAsync(string key, int seconds, int blockingSeconds)
-    {
-        using var context = await _lock.BlockingLockAsync(key, seconds, blockingSeconds);
-
-        if (context.IsAcquired)
-        {
-            Console.WriteLine($"Lock acquired for {context.Key}---{context.LockId}");
-        }
-    }
-
-    public void UsingBlockingLock(string key, int seconds, int blockingSeconds)
-    {
-        using var context = _lock.BlockingLock(key, seconds, blockingSeconds);
-
-        if (context.IsAcquired)
-        {
-            Console.WriteLine($"Lock acquired for {context.Key}---{context.LockId}");
-        }
-    }
-
-    public async Task BlockingLockAsync(string key, int seconds, int blockingSeconds)
-    {
-        var context = await _lock.BlockingLockAsync(key, seconds, blockingSeconds);
-
-        if (context.IsAcquired)
-        {
-            Console.WriteLine($"Lock acquired for {context.Key}---{context.LockId}");
-        }
-
-        await _lock.UnLockAsync(context);
-    }
-
-    public void BlockingLock(string key, int seconds, int blockingSeconds)
-    {
-        var context = _lock.BlockingLock(key, seconds, blockingSeconds);
-
-        if (context.IsAcquired)
-        {
-            Console.WriteLine($"Lock acquired for {context.Key}---{context.LockId}");
-        }
-
-        _lock.UnLock(context);
-    }
-
-    public async Task UsingRenewableBlockingLockAsync(string key, int seconds, int blockingSeconds, int renewalSeconds)
-    {
-        using var context = await _lock.BlockingLockAsync(key, seconds, blockingSeconds, renewalSeconds);
-
-        if (context.IsAcquired)
-        {
-            Console.WriteLine($"Lock acquired for {context.Key}---{context.LockId}");
-        }
-    }
-
-    public void UsingRenewableBlockingLock(string key, int seconds, int blockingSeconds, int renewalSeconds)
-    {
-        using var context = _lock.BlockingLock(key, seconds, blockingSeconds, renewalSeconds);
-
-        if (context.IsAcquired)
-        {
-            Console.WriteLine($"Lock acquired for {context.Key}---{context.LockId}");
-        }
-    }
-
-    public async Task RenewableBlockingLockAsync(string key, int seconds, int blockingSeconds, int renewalSeconds)
-    {
-        var context = await _lock.BlockingLockAsync(key, seconds, blockingSeconds, renewalSeconds);
-
-        if (context.IsAcquired)
-        {
-            Console.WriteLine($"Lock acquired for {context.Key}---{context.LockId}");
-        }
-
-        _lock.UnLock(context);
-    }
-
-    public void RenewableBlockingLock(string key, int seconds, int blockingSeconds, int renewalSeconds)
-    {
-        var context = _lock.BlockingLock(key, seconds, blockingSeconds, renewalSeconds);
-
-        if (context.IsAcquired)
-        {
-            Console.WriteLine($"Lock acquired for {context.Key}---{context.LockId}");
-        }
-
-        _lock.UnLock(context);
+        await using var tran = transactions.CreateTransaction();
+        tran.Set("key1", "value1", seconds: 60)
+            .Set("key2", "value2", seconds: 60)
+            .Remove("key3");
+        await tran.CommitAsync();
     }
 }
 ```
 
-EasyCoreDistributedLock提供了非阻塞锁、阻塞锁的api。支持using使用或直接调用获取锁，直接调用获取锁时最后一定要释放锁。
+---
 
-3. 服务缓存(ServerCache)
+## 2. Distributed lock
 
-3.1 注册服务缓存
+- Acquire: atomic `SET key lockId PX expiry NX`
+- Release: Lua script deletes only if `lockId` matches
+- Blocking acquire: exponential backoff (20??00ms), no busy-spin
+- Optional renewal watchdog; cancelled automatically on unlock/`Dispose`
 
+```csharp
+// Non-blocking
+await using var handle = await locks.AcquireLockAsync("order:42", expirySeconds: 30);
+if (handle.IsAcquired)
+{
+    // critical section
+}
+
+// Blocking + renewal every 10s while holding a 30s lease
+await using var blocking = await locks.BlockingLockAsync(
+    "order:42",
+    expirySeconds: 30,
+    waitTimeoutSeconds: 5,
+    renewalIntervalSeconds: 10);
 ```
-   builder.Services.EasyCoreServerCache();
+
+---
+
+## 3. Service cache (`[ServerCache]`)
+
+Cache keys include **declaring type + method name + argument values** (SHA-256 hashed).
+
+```csharp
+public interface IServer
+{
+    Task<string> GetUser(string userId);
+}
+
+public class Server : IServer
+{
+    [ServerCache(CacheSeconds = 100)]
+    public Task<string> GetUser(string userId)
+        => Task.FromResult($"user-{userId}");
+}
+
+// Registration
+builder.Services.AddServerCacheProxy<IServer, Server>();
+// Inject IServer ??calls are proxied and cached.
 ```
 
-3.2 使用服务缓存
+---
 
-```
- public class Server : IServer
- {
-     [ServerCache]
-     public async Task<string> ServerCache()
-     {
-         return await Task.FromResult("这是ServerCache，没有参数");
-     }
+## Production notes
 
-     [ServerCache]
-     public async Task<string> ServerCache(string intput)
-     {
-         return await Task.FromResult("这是ServerCache，有一个string类型的intput参数");
-     }
+| Topic | Behavior |
+|-------|----------|
+| Connection | Single shared `IRedisConnection` / `ConnectionMultiplexer`, disposed with the host |
+| Timeouts | `ConnectTimeout` / `SyncTimeout` are `TimeSpan` (not raw ?seconds ? 1000??fields) |
+| Cancellation | Cache/lock async APIs honor `CancellationToken` where applicable |
+| Lock safety | Unlock is ownership-checked; dispose unlocks only if acquired |
+| ServerCache scan | Opt-in assemblies only (no scanning of every DLL in the folder) |
 
-     [ServerCache]
-     public async Task<string> ServerCache(int intput)
-     {
-         return await Task.FromResult("这是ServerCache，有一个int类型的intput参数");
-     }
+---
 
-     [ServerCache]
-     public async Task<string> ServerCache(string intput1, string intput2)
-     {
-         return await Task.FromResult("这是ServerCache，有一个string类型的intput1参数和一个string类型的intput2参数");
-     }
+## Breaking changes (8.x ??9.0)
 
-     [ServerCache]
-     public async Task<string> ServerCache(string intput1, int intput2)
-     {
-         return await Task.FromResult("这是ServerCache，有一个string类型的intput1参数和一个int类型的intput2参数");
-     }
- }
-```
-[ServerCache] 特性默认对服务数据进行300秒的缓存。可在特性内修改缓存时间，如[ServerCache(CacheSeconds =100)]，即可设置缓存100秒。
+1. Unified `DistributedOption` (`TimeSpan` timeouts, properties instead of fields).
+2. Shared Redis connection; cache no longer uses Hash (`HSET`) for simple KV.
+3. Transactions: use `tran.Set(...)` then `CommitAsync()` ??do not call `IDistributedCache` inside the transaction.
+4. `IDistributedTransaction.CreateTransaction()` returns `ICacheTransaction`.
+5. `EasyCoreRedisService` no longer auto-scans all DLLs; pass assemblies or use `AddServerCacheProxy`.
+6. Removed incorrect ?Bloom filter??documentation for `KeyExists`.
 
+---
 
+## Demo
 
+See `demo/Web.EasyCore.Cache` (Swagger).
 
+Default Redis endpoint in the demo: `localhost:6379`.
 
+---
 
+## License
 
-
-
+MIT OR Apache-2.0

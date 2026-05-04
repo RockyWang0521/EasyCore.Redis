@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using RedisTest.ServerCache;
+using Web.EasyCore.Cache.Services.Server;
 
 namespace Web.EasyCore.Cache.Controllers
 {
@@ -12,24 +12,23 @@ namespace Web.EasyCore.Cache.Controllers
         public ServiceCacheController(IServer server) => _server = server;
 
         [HttpGet("ServerCacheNoParameter")]
-        public async Task<string> ServerCacheNoParameter() =>
-            await _server.ServerCache();
+        public Task<string> ServerCacheNoParameter()
+            => _server.ServerCache();
 
         [HttpGet("ServerCacheOneParameter/int")]
-        public async Task<string> ServerCacheOneParameterInt() =>
-            await _server.ServerCache(1);
+        public Task<string> ServerCacheOneParameterInt()
+            => _server.ServerCache(1);
 
         [HttpGet("ServerCacheOneParameter/string")]
-        public async Task<string> ServerCacheOneParameterString() =>
-            await _server.ServerCache("string");
+        public Task<string> ServerCacheOneParameterString()
+            => _server.ServerCache("string");
 
         [HttpGet("ServerCacheTwoParameter/string/string")]
-        public async Task<string> ServerCacheTwoParameterStringString() =>
-            await _server.ServerCache("string", "string");
+        public Task<string> ServerCacheTwoParameterStringString()
+            => _server.ServerCache("string", "string");
 
         [HttpGet("ServerCacheTwoParameter/string/int")]
-        public async Task<string> ServerCacheTwoParameterStringInt() =>
-            await _server.ServerCache("string", 1);
-
+        public Task<string> ServerCacheTwoParameterStringInt()
+            => _server.ServerCache("string", 1);
     }
 }
