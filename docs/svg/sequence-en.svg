@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="420" viewBox="0 0 980 420">
+  <rect width="980" height="420" rx="16" fill="#0f1419"/>
+  <text x="40" y="38" fill="#e8eef7" font-family="Segoe UI, Arial" font-size="18" font-weight="700">Core Flows  Cache · Lock · Service Cache</text>
+
+  <text x="40" y="75" fill="#3d9cf0" font-family="Segoe UI, Arial" font-size="13" font-weight="700">1) Distributed Cache</text>
+  <rect x="40" y="90" width="130" height="58" rx="10" fill="#243044" stroke="#3d9cf0"/>
+  <text x="105" y="115" text-anchor="middle" fill="#e8eef7" font-family="Segoe UI, Arial" font-size="12" font-weight="700">Business</text>
+  <text x="105" y="133" text-anchor="middle" fill="#8fa3bc" font-family="Segoe UI, Arial" font-size="10">Inject Cache</text>
+
+  <rect x="200" y="90" width="150" height="58" rx="10" fill="#243044" stroke="#3d9cf0"/>
+  <text x="275" y="115" text-anchor="middle" fill="#e8eef7" font-family="Segoe UI, Arial" font-size="12" font-weight="700">IDistributedCache</text>
+  <text x="275" y="133" text-anchor="middle" fill="#8fa3bc" font-family="Segoe UI, Arial" font-size="10">String/Hash/List&</text>
+
+  <rect x="380" y="90" width="150" height="58" rx="10" fill="#243044" stroke="#3ecf8e"/>
+  <text x="455" y="115" text-anchor="middle" fill="#e8eef7" font-family="Segoe UI, Arial" font-size="12" font-weight="700">Prefixed Key</text>
+  <text x="455" y="133" text-anchor="middle" fill="#8fa3bc" font-family="Segoe UI, Arial" font-size="10">App:user:1</text>
+
+  <rect x="560" y="90" width="150" height="58" rx="10" fill="#243044" stroke="#f0b429"/>
+  <text x="635" y="115" text-anchor="middle" fill="#e8eef7" font-family="Segoe UI, Arial" font-size="12" font-weight="700">Redis Command</text>
+  <text x="635" y="133" text-anchor="middle" fill="#8fa3bc" font-family="Segoe UI, Arial" font-size="10">GET / SET / HSET&</text>
+
+  <rect x="740" y="90" width="200" height="58" rx="10" fill="#243044" stroke="#dc382c"/>
+  <text x="840" y="115" text-anchor="middle" fill="#e8eef7" font-family="Segoe UI, Arial" font-size="12" font-weight="700">Redis Server</text>
+  <text x="840" y="133" text-anchor="middle" fill="#8fa3bc" font-family="Segoe UI, Arial" font-size="10">Persist / Expire</text>
+
+  <path d="M170 119 H200" stroke="#8fa3bc" stroke-width="2"/>
+  <path d="M350 119 H380" stroke="#8fa3bc" stroke-width="2"/>
+  <path d="M530 119 H560" stroke="#8fa3bc" stroke-width="2"/>
+  <path d="M710 119 H740" stroke="#8fa3bc" stroke-width="2"/>
+
+  <text x="40" y="185" fill="#f0b429" font-family="Segoe UI, Arial" font-size="13" font-weight="700">2) Distributed Lock</text>
+  <rect x="40" y="200" width="150" height="58" rx="10" fill="#243044" stroke="#f0b429"/>
+  <text x="115" y="225" text-anchor="middle" fill="#e8eef7" font-family="Segoe UI, Arial" font-size="12" font-weight="700">AcquireLock</text>
+  <text x="115" y="243" text-anchor="middle" fill="#8fa3bc" font-family="Segoe UI, Arial" font-size="10">SET NX PX</text>
+
+  <rect x="220" y="200" width="150" height="58" rx="10" fill="#243044" stroke="#f0b429"/>
+  <text x="295" y="225" text-anchor="middle" fill="#e8eef7" font-family="Segoe UI, Arial" font-size="12" font-weight="700">LockContext</text>
+  <text x="295" y="243" text-anchor="middle" fill="#8fa3bc" font-family="Segoe UI, Arial" font-size="10">IsAcquired?</text>
+
+  <rect x="400" y="200" width="160" height="58" rx="10" fill="#243044" stroke="#3ecf8e"/>
+  <text x="480" y="225" text-anchor="middle" fill="#e8eef7" font-family="Segoe UI, Arial" font-size="12" font-weight="700">Critical Section</text>
+  <text x="480" y="243" text-anchor="middle" fill="#8fa3bc" font-family="Segoe UI, Arial" font-size="10">Business Logic</text>
+
+  <rect x="590" y="200" width="160" height="58" rx="10" fill="#243044" stroke="#f07178"/>
+  <text x="670" y="225" text-anchor="middle" fill="#e8eef7" font-family="Segoe UI, Arial" font-size="12" font-weight="700">Dispose / UnLock</text>
+  <text x="670" y="243" text-anchor="middle" fill="#8fa3bc" font-family="Segoe UI, Arial" font-size="10">Lua check LockId</text>
+
+  <rect x="780" y="200" width="160" height="58" rx="10" fill="#243044" stroke="#3d9cf0"/>
+  <text x="860" y="225" text-anchor="middle" fill="#e8eef7" font-family="Segoe UI, Arial" font-size="12" font-weight="700">Optional Renew</text>
+  <text x="860" y="243" text-anchor="middle" fill="#8fa3bc" font-family="Segoe UI, Arial" font-size="10">Blocking + Watchdog</text>
+
+  <path d="M190 229 H220" stroke="#8fa3bc" stroke-width="2"/>
+  <path d="M370 229 H400" stroke="#8fa3bc" stroke-width="2"/>
+  <path d="M560 229 H590" stroke="#8fa3bc" stroke-width="2"/>
+
+  <text x="40" y="295" fill="#3ecf8e" font-family="Segoe UI, Arial" font-size="13" font-weight="700">3) Service Cache [ServerCache]</text>
+  <rect x="40" y="310" width="150" height="70" rx="10" fill="#243044" stroke="#3ecf8e"/>
+  <text x="115" y="338" text-anchor="middle" fill="#e8eef7" font-family="Segoe UI, Arial" font-size="12" font-weight="700">Call IService</text>
+  <text x="115" y="358" text-anchor="middle" fill="#8fa3bc" font-family="Segoe UI, Arial" font-size="10">Castle Proxy</text>
+
+  <rect x="220" y="310" width="170" height="70" rx="10" fill="#243044" stroke="#3ecf8e"/>
+  <text x="305" y="338" text-anchor="middle" fill="#e8eef7" font-family="Segoe UI, Arial" font-size="12" font-weight="700">Interceptor</text>
+  <text x="305" y="358" text-anchor="middle" fill="#8fa3bc" font-family="Segoe UI, Arial" font-size="10">KeyExists?</text>
+
+  <rect x="420" y="310" width="170" height="70" rx="10" fill="#243044" stroke="#f0b429"/>
+  <text x="505" y="330" text-anchor="middle" fill="#e8eef7" font-family="Segoe UI, Arial" font-size="12" font-weight="700">Hit ’ Deserialize</text>
+  <text x="505" y="350" text-anchor="middle" fill="#e8eef7" font-family="Segoe UI, Arial" font-size="12" font-weight="700">Miss ’ Invoke</text>
+  <text x="505" y="368" text-anchor="middle" fill="#8fa3bc" font-family="Segoe UI, Arial" font-size="10">Then write cache</text>
+
+  <rect x="620" y="310" width="320" height="70" rx="10" fill="#243044" stroke="#3d9cf0"/>
+  <text x="780" y="338" text-anchor="middle" fill="#e8eef7" font-family="Segoe UI, Arial" font-size="12" font-weight="700">Key = svc:{Method}:{SHA256}</text>
+  <text x="780" y="360" text-anchor="middle" fill="#8fa3bc" font-family="Segoe UI, Arial" font-size="11">Type + method + args JSON hash</text>
+
+  <path d="M190 345 H220" stroke="#8fa3bc" stroke-width="2"/>
+  <path d="M390 345 H420" stroke="#8fa3bc" stroke-width="2"/>
+  <path d="M590 345 H620" stroke="#8fa3bc" stroke-width="2"/>
+</svg>
