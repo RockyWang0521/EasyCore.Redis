@@ -524,47 +524,68 @@ await using var blocking = await locks.BlockingLockAsync(
 
 命名空间：`EasyCore.Redis.Service`（特性在 `EasyCore.Redis.Service.Attribute`）
 
-通过 Castle DynamicProxy 拦截返回 `Task<T>` 的方法，做 cache-aside。
+独立 NuGet 包（**不依赖** EasyCore.Invocation）。通过 Castle DynamicProxy 拦截返回 `Task<T>` 的方法做 cache-aside；也可直接挂在 MVC Controller / Action（特性实现 `IFilterFactory`）。
 
-### 12.1 特性
+### 12.1 放置位置（与 Invocation 风格一致，但自包含）
+
+| 挂载位置 | 命中范围 | 生效路径 |
+|---|---|---|
+| 接口类型 `[ServerCache] interface IFoo` | 该接口全部方法 | Castle 接口代理 |
+| 接口方法 | 仅该方法 | Castle 接口代理 |
+| 实现类 | 该类对外接口方法 | Castle 接口代理 |
+| 实现方法 | 仅该方法 | Castle 接口代理 |
+| Controller / Action | 该类或该 Action | MVC `IFilterFactory`（无需全局 Filter） |
+
+解析优先级（最具体胜出）：**实现方法 → 接口方法 → 类 → 接口类型**。
+
+与 EasyCore.Polly / EasyCore.Invocation 等其它包组合时：各自用 `TryAddEnumerable` 注册自己的 `IAsyncInterceptor`（**不要**用 `TryAdd<IAsyncInterceptor>`，否则只会留下第一个），代理创建时通过 `GetServices<IAsyncInterceptor>()` 堆叠，**互不引用、互不写死类型名**。默认 `Order`：Invocation `0`（最外）→ Polly `50` → ServerCache `100`（最内）。
+
+### 12.2 特性
 
 
 | 属性                | 默认      | 说明             |
 | ----------------- | ------- | -------------- |
 | `CacheSeconds`    | `300`   | TTL（秒）         |
 | `CacheNullValues` | `false` | 是否缓存 `null` 结果 |
+| `Order`           | `100`   | MVC / 拦截器堆叠顺序（越小越外） |
 
 
 缓存键格式：`svc:{MethodName}:{sha256}`，哈希输入为 `声明类型全名:方法名:参数JSON`。
 
-### 12.2 注册方式
+### 12.3 注册方式
 
 ```csharp
+using EasyCore.Redis.Service.Attribute;
+
+// 推荐：特性挂在接口上，实现类保持干净
+[ServerCache(CacheSeconds = 120)]
 public interface IServer
 {
     Task<string> GetUser(string userId);
+
+    [ServerCache(CacheSeconds = 60)]
+    Task<string> GetHot(string id);
 }
 
 public class Server : IServer
 {
-    [ServerCache(CacheSeconds = 100)]
     public Task<string> GetUser(string userId)
         => Task.FromResult($"user-{userId}");
+
+    public Task<string> GetHot(string id)
+        => Task.FromResult($"hot-{id}");
 }
 
 // 方式 A：EasyCoreRedis / EasyCoreRedisService 自动扫描
-// 要求实现类名与接口满足 I{ClassName} 约定（如 Server ↔ IServer）
-
 builder.Services.EasyCoreRedisService();
 // 或补充程序集：
 builder.Services.EasyCoreRedisService(o => o.Assemblies.Add(typeof(Server).Assembly));
 
-// 方式 B：显式代理（推荐，最清晰）
+// 方式 B：显式代理
 builder.Services.AddServerCacheProxy<IServer, Server>();
 ```
 
-注入 `IServer` 后，调用会经代理；未标注 `[ServerCache]` 的方法直通不缓存。  
-非泛型 `Task`（无结果）不会缓存。
+注入 `IServer` 后，调用会经代理。非泛型 `Task`（无结果）不会缓存。Controller 上直接标 `[ServerCache]` 即可，无需额外 Filter 注册。
 
 ---
 
@@ -598,17 +619,18 @@ builder.Services.AddServerCacheProxy<IServer, Server>();
 
 | 项目                                                   | 说明                           | 命令                                             |
 | ---------------------------------------------------- | ---------------------------- | ---------------------------------------------- |
-| `[demo/Web.EasyCore.Cache](demo/Web.EasyCore.Cache)` | Swagger 演示缓存 / 事务 / 锁 / 服务缓存 | `dotnet run --project demo/Web.EasyCore.Cache` |
+| `[demo/Web.EasyCore.Cache](demo/Web.EasyCore.Cache)` | Swagger：缓存 / 事务 / 锁 / `[ServerCache]` + **交叉堆叠** | `dotnet run --project demo/Web.EasyCore.Cache` |
 
 
 默认 Redis：`localhost:6379`（见 `appsettings.json` → `EasyCore:Redis`）。
 
 控制器示例：
 
-- `DistributedCacheController` — 五大数据类型
-- `DistributedTransactionController` — MULTI/EXEC
-- `DistributedlockController` — 分布式锁
-- `ServiceCacheController` — `[ServerCache]`
+- `GET /api/demo` — 放置场景 A–F 总览
+- A–F Controllers — 接口类型 / 类 / 方法 / 接口方法 / 多接口 / API
+- `ServiceCacheController` — `[ServerCache]` 参数重载（legacy）
+- `ComboStackController` — `/api/combo`：三包堆叠联调
+- `DistributedCacheController` / Transaction / Lock — 底层 API
 
 ---
 
@@ -624,7 +646,10 @@ A: 引用 `EasyCore.Redis.Locking`，调用 `EasyCoreRedisLock(options => { … 
 A: 不会。请使用 `ICacheTransaction.Set(...).CommitAsync()`。
 
 **Q: `[ServerCache]` 为什么没生效？**  
-A: 必须注入**接口**（代理目标）；方法需返回 `Task<T>` 并标注特性；实现类需被 `AddServerCacheProxy` 或自动扫描注册。
+A: 服务场景须注入**接口**（代理目标）；特性可挂在接口 / 类 / 方法上；方法需返回 `Task<T>`；实现需被 `AddServerCacheProxy` 或自动扫描注册。API 场景可直接挂 Controller / Action。
+
+**Q: 能和 EasyCore.Polly / EasyCore.Invocation 一起用吗？**  
+A: 可以。三者是独立 NuGet，互不引用；各包以 `TryAddEnumerable` 注册 `IAsyncInterceptor`，代理侧 `GetServices` 堆叠生效。勿用单槽 `TryAdd<IAsyncInterceptor>`，否则只会生效先注册的那一个。
 
 **Q: `List*Async` / `Set*Async` 的 `params` 参数顺序？**  
 A: `CancellationToken` 在 `params` 数组之前，例如 `SetAddAsync(key, ct, "a", "b")`。

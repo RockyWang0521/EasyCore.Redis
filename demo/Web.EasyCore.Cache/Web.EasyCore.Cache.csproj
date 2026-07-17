@@ -15,6 +15,8 @@
     <ProjectReference Include="..\..\src\EasyCore.Redis.Distributed\EasyCore.Redis.Distributed.csproj" />
     <ProjectReference Include="..\..\src\EasyCore.Redis.Locking\EasyCore.Redis.Locking.csproj" />
     <ProjectReference Include="..\..\src\EasyCore.Redis.Service\EasyCore.Redis.Service.csproj" />
+    <ProjectReference Include="..\..\..\EasyCore.Invocation\src\EasyCore.Invocation\EasyCore.Invocation.csproj" />
+    <ProjectReference Include="..\..\..\EasyCore.Polly\src\EasyCore.Polly\EasyCore.Polly.csproj" />
   </ItemGroup>
 
 </Project>
