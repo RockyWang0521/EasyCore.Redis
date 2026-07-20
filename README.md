@@ -2,13 +2,13 @@
 
 > **EasyCore.Redis** 是面向 .NET 8 的生产级 Redis 工具库。基于 [StackExchange.Redis](https://stackexchange.github.io/StackExchange.Redis/)，提供**分布式缓存**（五大数据类型）、**MULTI/EXEC 事务**、**分布式锁**，以及基于 Castle DynamicProxy 的 `**[ServerCache]` 方法结果缓存**。
 
-.NET
-C#
-Redis
-Cache
-Lock
-License
-Version
+![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet)
+![C#](https://img.shields.io/badge/C%23-12-239120?logo=csharp)
+![Redis](https://img.shields.io/badge/Redis-StackExchange-DC382D?logo=redis)
+![Cache](https://img.shields.io/badge/Cache-String%20%7C%20Hash%20%7C%20List%20%7C%20Set%20%7C%20ZSet-orange)
+![Lock](https://img.shields.io/badge/Lock-SET%20NX%20PX%20%2B%20Lua-blueviolet)
+![License](https://img.shields.io/badge/License-MIT-yellow)
+![Version](https://img.shields.io/badge/Version-8.3.0-blue)
 
 仓库：[github.com/RockyWang0521/EasyCore.Redis](https://github.com/RockyWang0521/EasyCore.Redis)
 
@@ -73,7 +73,7 @@ EasyCore.Redis 解决「在 ASP.NET Core 中安全、清晰地使用 Redis」的
 
 | 原则        | 说明                                             |
 | --------- | ---------------------------------------------- |
-| **低摩擦接入** | 一个 `EasyCoreRedis(...)` 即可注册全部能力               |
+| **低摩擦接入** | 一个 `AddEasyCoreRedis(...)` 即可注册全部能力               |
 | **按需拆分**  | `.Distributed` / `.Locking` / `.Service` 可独立引用 |
 | **键空间隔离** | 所有逻辑键自动加 `{DistributedName}:` 前缀               |
 | **锁安全**   | 解锁校验 `LockId`；`Dispose` 仅在持有时释放                |
@@ -113,13 +113,13 @@ EasyCore.Redis/
 ### 2.4 依赖关系（文字版）
 
 ```text
-EasyCoreRedis() / EasyCoreRedis(IConfiguration)
+AddEasyCoreRedis() / AddEasyCoreRedis(IConfiguration)
         │
-        ├── EasyCoreRedisDistributed ──► IRedisConnection
+        ├── AddEasyCoreRedisDistributed ──► IRedisConnection
         │                              ├─ IDistributedCache
         │                              └─ IDistributedTransaction → ICacheTransaction
-        ├── EasyCoreRedisLock ─────────► IDistributedLock  (复用同一连接)
-        └── EasyCoreRedisService ──────► [ServerCache] Proxy (依赖 IDistributedCache)
+        ├── AddEasyCoreRedisLock ─────────► IDistributedLock  (复用同一连接)
+        └── AddEasyCoreRedisService ──────► [ServerCache] Proxy (依赖 IDistributedCache)
 ```
 
 ---
@@ -135,7 +135,7 @@ EasyCoreRedis() / EasyCoreRedis(IConfiguration)
 | `EasyCore.Redis.Service`     | `[ServerCache]` Castle 代理 | 按需   |
 
 
-> 只装锁时需先有连接：可用 `EasyCoreRedisLock(configure)`，或先 `EasyCoreRedisDistributed` 再 `EasyCoreRedisLock()`。
+> 只装锁时需先有连接：可用 `AddEasyCoreRedisLock(configure)`，或先 `AddEasyCoreRedisDistributed` 再 `AddEasyCoreRedisLock()`。
 
 ---
 
@@ -188,7 +188,7 @@ dotnet add package EasyCore.Redis.Service
 ```csharp
 using EasyCore.Redis;
 
-builder.Services.EasyCoreRedis(options =>
+builder.Services.AddEasyCoreRedis(options =>
 {
     options.EndPoints = new List<string> { "127.0.0.1:6379" };
     options.ConnectTimeout = TimeSpan.FromSeconds(5);
@@ -202,7 +202,7 @@ builder.Services.EasyCoreRedis(options =>
 ### 7️⃣.2️⃣ 从 appsettings.json 注册
 
 ```csharp
-builder.Services.EasyCoreRedis(
+builder.Services.AddEasyCoreRedis(
     builder.Configuration.GetSection("EasyCore:Redis"));
 ```
 
@@ -244,9 +244,9 @@ public class UserService(IDistributedCache cache, IDistributedLock locks)
 ### 7️⃣.4️⃣ 按特性拆分注册
 
 ```csharp
-builder.Services.EasyCoreRedisDistributed(o => { /* EndPoints… */ });
-builder.Services.EasyCoreRedisLock();   // 复用已注册连接
-builder.Services.EasyCoreRedisService(); // 自动扫描带 [ServerCache] 的服务
+builder.Services.AddEasyCoreRedisDistributed(o => { /* EndPoints… */ });
+builder.Services.AddEasyCoreRedisLock();   // 复用已注册连接
+builder.Services.AddEasyCoreRedisService(); // 自动扫描带 [ServerCache] 的服务
 // 或显式：builder.Services.AddServerCacheProxy<IMyService, MyService>();
 ```
 
@@ -576,10 +576,10 @@ public class Server : IServer
         => Task.FromResult($"hot-{id}");
 }
 
-// 方式 A：EasyCoreRedis / EasyCoreRedisService 自动扫描
-builder.Services.EasyCoreRedisService();
+// 方式 A：AddEasyCoreRedis / AddEasyCoreRedisService 自动扫描
+builder.Services.AddEasyCoreRedisService();
 // 或补充程序集：
-builder.Services.EasyCoreRedisService(o => o.Assemblies.Add(typeof(Server).Assembly));
+builder.Services.AddEasyCoreRedisService(o => o.Assemblies.Add(typeof(Server).Assembly));
 
 // 方式 B：显式代理
 builder.Services.AddServerCacheProxy<IServer, Server>();
@@ -640,7 +640,7 @@ builder.Services.AddServerCacheProxy<IServer, Server>();
 A: 实际键是 `{DistributedName}:user:1`。检查配置中的 `DistributedName`。
 
 **Q: 只想用锁，不装缓存包？**  
-A: 引用 `EasyCore.Redis.Locking`，调用 `EasyCoreRedisLock(options => { … })` 会一并注册连接。
+A: 引用 `EasyCore.Redis.Locking`，调用 `AddEasyCoreRedisLock(options => { … })` 会一并注册连接。
 
 **Q: 事务里调用 `IDistributedCache.SetAsync` 会原子执行吗？**  
 A: 不会。请使用 `ICacheTransaction.Set(...).CommitAsync()`。
@@ -661,7 +661,7 @@ A: 当前为 **8.0.0**。
 
 ## 16. 📄 License
 
-MIT OR Apache-2.0 — 详见 [LICENSE](LICENSE) 与 NuGet 包声明。
+MIT — 详见 [LICENSE](LICENSE) 与 NuGet 包声明。
 
 ---
 

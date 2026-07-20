@@ -7,8 +7,8 @@
 ![Redis](https://img.shields.io/badge/Redis-StackExchange-DC382D?logo=redis)
 ![Cache](https://img.shields.io/badge/Cache-String%20%7C%20Hash%20%7C%20List%20%7C%20Set%20%7C%20ZSet-orange)
 ![Lock](https://img.shields.io/badge/Lock-SET%20NX%20PX%20%2B%20Lua-blueviolet)
-![License](https://img.shields.io/badge/License-MIT%20OR%20Apache--2.0-yellow)
-![Version](https://img.shields.io/badge/Version-8.0.0-blue)
+![License](https://img.shields.io/badge/License-MIT-yellow)
+![Version](https://img.shields.io/badge/Version-8.3.0-blue)
 
 Repository: [github.com/RockyWang0521/EasyCore.Redis](https://github.com/RockyWang0521/EasyCore.Redis)
 
@@ -66,7 +66,7 @@ EasyCore.Redis makes Redis safe and approachable in ASP.NET Core:
 
 | Principle | Meaning |
 |---|---|
-| **Low friction** | One `EasyCoreRedis(...)` registers everything |
+| **Low friction** | One `AddEasyCoreRedis(...)` registers everything |
 | **Composable** | `.Distributed` / `.Locking` / `.Service` can be referenced alone |
 | **Key isolation** | Every logical key is prefixed with `{DistributedName}:` |
 | **Safe locks** | Unlock checks `LockId`; `Dispose` unlocks only when acquired |
@@ -105,13 +105,13 @@ EasyCore.Redis/
 ### 2.4 Dependency Graph
 
 ```text
-EasyCoreRedis() / EasyCoreRedis(IConfiguration)
+AddEasyCoreRedis() / AddEasyCoreRedis(IConfiguration)
         │
-        ├── EasyCoreRedisDistributed ──► IRedisConnection
+        ├── AddEasyCoreRedisDistributed ──► IRedisConnection
         │                              ├─ IDistributedCache
         │                              └─ IDistributedTransaction → ICacheTransaction
-        ├── EasyCoreRedisLock ─────────► IDistributedLock  (reuses same connection)
-        └── EasyCoreRedisService ──────► [ServerCache] Proxy (needs IDistributedCache)
+        ├── AddEasyCoreRedisLock ─────────► IDistributedLock  (reuses same connection)
+        └── AddEasyCoreRedisService ──────► [ServerCache] Proxy (needs IDistributedCache)
 ```
 
 ---
@@ -125,7 +125,7 @@ EasyCoreRedis() / EasyCoreRedis(IConfiguration)
 | `EasyCore.Redis.Locking` | `IDistributedLock` | Optional |
 | `EasyCore.Redis.Service` | `[ServerCache]` Castle proxy | Optional |
 
-> Lock-only setups still need a connection: use `EasyCoreRedisLock(configure)`, or register `EasyCoreRedisDistributed` then `EasyCoreRedisLock()`.
+> Lock-only setups still need a connection: use `AddEasyCoreRedisLock(configure)`, or register `AddEasyCoreRedisDistributed` then `AddEasyCoreRedisLock()`.
 
 ---
 
@@ -174,7 +174,7 @@ dotnet add package EasyCore.Redis.Service
 ```csharp
 using EasyCore.Redis;
 
-builder.Services.EasyCoreRedis(options =>
+builder.Services.AddEasyCoreRedis(options =>
 {
     options.EndPoints = new List<string> { "127.0.0.1:6379" };
     options.ConnectTimeout = TimeSpan.FromSeconds(5);
@@ -188,7 +188,7 @@ builder.Services.EasyCoreRedis(options =>
 ### 7️⃣.2️⃣ Register from appsettings.json
 
 ```csharp
-builder.Services.EasyCoreRedis(
+builder.Services.AddEasyCoreRedis(
     builder.Configuration.GetSection("EasyCore:Redis"));
 ```
 
@@ -230,9 +230,9 @@ public class UserService(IDistributedCache cache, IDistributedLock locks)
 ### 7️⃣.4️⃣ Register features separately
 
 ```csharp
-builder.Services.EasyCoreRedisDistributed(o => { /* EndPoints… */ });
-builder.Services.EasyCoreRedisLock();    // reuses shared connection
-builder.Services.EasyCoreRedisService(); // auto-scan [ServerCache] services
+builder.Services.AddEasyCoreRedisDistributed(o => { /* EndPoints… */ });
+builder.Services.AddEasyCoreRedisLock();    // reuses shared connection
+builder.Services.AddEasyCoreRedisService(); // auto-scan [ServerCache] services
 // or: builder.Services.AddServerCacheProxy<IMyService, MyService>();
 ```
 
@@ -535,7 +535,7 @@ public class Server : IServer
         => Task.FromResult($"hot-{id}");
 }
 
-builder.Services.EasyCoreRedisService();
+builder.Services.AddEasyCoreRedisService();
 // or: builder.Services.AddServerCacheProxy<IServer, Server>();
 ```
 
@@ -590,7 +590,7 @@ Controllers:
 A: The real key is `{DistributedName}:user:1`. Check `DistributedName`.
 
 **Q: Can I use only the lock package?**  
-A: Yes. Reference `EasyCore.Redis.Locking` and call `EasyCoreRedisLock(options => { … })` to register the connection as well.
+A: Yes. Reference `EasyCore.Redis.Locking` and call `AddEasyCoreRedisLock(options => { … })` to register the connection as well.
 
 **Q: Does calling `IDistributedCache.SetAsync` inside a transaction make it atomic?**  
 A: No. Use `ICacheTransaction.Set(...).CommitAsync()`.
@@ -611,7 +611,7 @@ A: Current release is **8.0.0**.
 
 ## 16. 📄 License
 
-MIT OR Apache-2.0 — see [LICENSE](LICENSE) and the NuGet package declaration.
+MIT — see [LICENSE](LICENSE) and the NuGet package declaration.
 
 ---
 

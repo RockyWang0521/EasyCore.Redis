@@ -18,7 +18,7 @@ namespace EasyCore.Redis.Distributed
         /// <param name="services">Service collection.</param>
         /// <param name="configure">Configures <see cref="DistributedOption"/> (endpoints, credentials, prefix, etc.).</param>
         /// <returns>The same <paramref name="services"/> instance for chaining.</returns>
-        public static IServiceCollection EasyCoreRedisDistributed(
+        public static IServiceCollection AddEasyCoreRedisDistributed(
             this IServiceCollection services,
             Action<DistributedOption> configure)
         {
@@ -38,7 +38,7 @@ namespace EasyCore.Redis.Distributed
         /// <param name="services">Service collection.</param>
         /// <param name="configuration">Configuration section containing <see cref="DistributedOption"/> values.</param>
         /// <returns>The same <paramref name="services"/> instance for chaining.</returns>
-        public static IServiceCollection EasyCoreRedisDistributed(
+        public static IServiceCollection AddEasyCoreRedisDistributed(
             this IServiceCollection services,
             IConfiguration configuration)
         {

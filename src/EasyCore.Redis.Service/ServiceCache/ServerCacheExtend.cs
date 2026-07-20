@@ -31,7 +31,7 @@ public static class ServerCacheExtend
     /// <summary>
     /// Registers the cache interceptor and auto-registers instrumented services.
     /// </summary>
-    public static IServiceCollection EasyCoreRedisService(
+    public static IServiceCollection AddEasyCoreRedisService(
         this IServiceCollection services,
         Action<ServerCacheOptions>? configure = null)
     {

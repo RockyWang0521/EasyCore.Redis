@@ -34,9 +34,9 @@ public class Program
         builder.Services.AddSingleton<IRedisLock, RedisLock>();
 
         // Independent packages — interceptors stack via DI.
-        builder.Services.EasyCoreRedis(builder.Configuration.GetSection("EasyCore:Redis"));
-        builder.Services.EasyCorePolly(o => o.AddAssemblyFrom<ComboStackService>());
-        builder.Services.EasyCoreInvocation(o => o.AddAssemblyFrom<ComboStackService>());
+        builder.Services.AddEasyCoreRedis(builder.Configuration.GetSection("EasyCore:Redis"));
+        builder.Services.AddEasyCorePolly(o => o.AddAssemblyFrom<ComboStackService>());
+        builder.Services.AddEasyCoreInvocation(o => o.AddAssemblyFrom<ComboStackService>());
         builder.Services.Invocation<TraceInvocation>(ServiceLifetime.Singleton);
 
         var app = builder.Build();

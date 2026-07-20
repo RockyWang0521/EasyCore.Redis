@@ -19,7 +19,7 @@ namespace EasyCore.Redis.Locking
         /// </summary>
         /// <param name="services">Service collection.</param>
         /// <returns>The same <paramref name="services"/> instance for chaining.</returns>
-        public static IServiceCollection EasyCoreRedisLock(this IServiceCollection services)
+        public static IServiceCollection AddEasyCoreRedisLock(this IServiceCollection services)
         {
             ArgumentNullException.ThrowIfNull(services);
 
@@ -39,7 +39,7 @@ namespace EasyCore.Redis.Locking
         /// <param name="services">Service collection.</param>
         /// <param name="configure">Configures <see cref="DistributedOption"/>.</param>
         /// <returns>The same <paramref name="services"/> instance for chaining.</returns>
-        public static IServiceCollection EasyCoreRedisLock(
+        public static IServiceCollection AddEasyCoreRedisLock(
             this IServiceCollection services,
             Action<DistributedOption> configure)
         {
@@ -50,7 +50,7 @@ namespace EasyCore.Redis.Locking
             services.Configure(configure);
             services.TryAddSingleton<IRedisConnection, RedisConnection>();
 
-            return services.EasyCoreRedisLock();
+            return services.AddEasyCoreRedisLock();
         }
     }
 }

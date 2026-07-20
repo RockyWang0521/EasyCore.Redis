@@ -18,16 +18,16 @@ namespace EasyCore.Redis
         /// <param name="services">Service collection.</param>
         /// <param name="configure">Configures Redis connection options.</param>
         /// <returns>The same <paramref name="services"/> instance for chaining.</returns>
-        public static IServiceCollection EasyCoreRedis(
+        public static IServiceCollection AddEasyCoreRedis(
             this IServiceCollection services,
             Action<DistributedOption> configure)
         {
             ArgumentNullException.ThrowIfNull(services);
             ArgumentNullException.ThrowIfNull(configure);
 
-            services.EasyCoreRedisDistributed(configure);
-            services.EasyCoreRedisLock();
-            services.EasyCoreRedisService();
+            services.AddEasyCoreRedisDistributed(configure);
+            services.AddEasyCoreRedisLock();
+            services.AddEasyCoreRedisService();
             return services;
         }
 
@@ -38,16 +38,16 @@ namespace EasyCore.Redis
         /// <param name="services">Service collection.</param>
         /// <param name="configuration">Configuration section containing Redis options.</param>
         /// <returns>The same <paramref name="services"/> instance for chaining.</returns>
-        public static IServiceCollection EasyCoreRedis(
+        public static IServiceCollection AddEasyCoreRedis(
             this IServiceCollection services,
             IConfiguration configuration)
         {
             ArgumentNullException.ThrowIfNull(services);
             ArgumentNullException.ThrowIfNull(configuration);
 
-            services.EasyCoreRedisDistributed(configuration);
-            services.EasyCoreRedisLock();
-            services.EasyCoreRedisService();
+            services.AddEasyCoreRedisDistributed(configuration);
+            services.AddEasyCoreRedisLock();
+            services.AddEasyCoreRedisService();
             return services;
         }
     }

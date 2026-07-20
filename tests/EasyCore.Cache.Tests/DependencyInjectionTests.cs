@@ -1,4 +1,4 @@
-﻿using EasyCore.Redis;
+using EasyCore.Redis;
 using EasyCore.Redis.Distributed;
 using EasyCore.Redis.Distributed.Connection;
 using EasyCore.Redis.Distributed.Transaction;
@@ -15,7 +15,7 @@ public class DependencyInjectionTests
     public void EasyCoreRedis_RegistersCoreServices()
     {
         var services = new ServiceCollection();
-        services.EasyCoreRedis(o =>
+        services.AddEasyCoreRedis(o =>
         {
             o.EndPoints = new List<string> { "127.0.0.1:6379" };
             o.DistributedName = "Tests";
@@ -31,7 +31,7 @@ public class DependencyInjectionTests
     public void AddServerCacheProxy_RegistersInterface()
     {
         var services = new ServiceCollection();
-        services.EasyCoreRedisDistributed(o =>
+        services.AddEasyCoreRedisDistributed(o =>
         {
             o.EndPoints = new List<string> { "127.0.0.1:6379" };
         });
