@@ -124,9 +124,15 @@ internal static class ServerCacheAttributeLocator
         MethodInfo method,
         MethodInfo? proxyMethod)
     {
+        // Castle interface proxy over DispatchProxy: Method is the contract method.
         if (proxyMethod is not null && proxyMethod.DeclaringType == iface)
         {
             return proxyMethod;
+        }
+
+        if (method.DeclaringType == iface)
+        {
+            return method;
         }
 
         try
@@ -142,7 +148,16 @@ internal static class ServerCacheAttributeLocator
         }
         catch (ArgumentException)
         {
-            // Interface not mapped.
+            // Interface not mapped (e.g. some DispatchProxy generated types).
+        }
+
+        foreach (var candidate in iface.GetMethods())
+        {
+            if (MethodsEqual(candidate, method) ||
+                (proxyMethod is not null && MethodsEqual(candidate, proxyMethod)))
+            {
+                return candidate;
+            }
         }
 
         return null;

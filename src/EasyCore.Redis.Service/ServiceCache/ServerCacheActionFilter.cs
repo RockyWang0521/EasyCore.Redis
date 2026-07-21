@@ -86,8 +86,10 @@ internal sealed class ServerCacheActionFilter : IAsyncActionFilter
     private static object? ExtractPayload(IActionResult? result)
         => result switch
         {
+            // Dynamic API / AppService actions typically return Task<T> → ObjectResult.
             ObjectResult objectResult => objectResult.Value,
             JsonResult jsonResult => jsonResult.Value,
+            ContentResult contentResult => contentResult.Content,
             _ => null
         };
 

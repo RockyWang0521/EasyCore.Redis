@@ -1,5 +1,6 @@
 using System.Reflection;
 using EasyCore.Redis.Service.Attribute;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 
 namespace EasyCore.Redis.Service;
@@ -17,6 +18,11 @@ internal sealed class ServerCacheInterfaceAttributeConvention : IApplicationMode
         foreach (var controller in application.Controllers)
         {
             var controllerType = controller.ControllerType.AsType();
+            if (!typeof(ControllerBase).IsAssignableFrom(controllerType))
+            {
+                continue;
+            }
+
             foreach (var action in controller.Actions)
             {
                 ApplyAction(controllerType, action);
