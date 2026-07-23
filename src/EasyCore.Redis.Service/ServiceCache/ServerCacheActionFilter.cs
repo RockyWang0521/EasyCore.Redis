@@ -1,12 +1,11 @@
-using System.Reflection;
 using EasyCore.Redis.Distributed;
 using EasyCore.Redis.Service.Attribute;
-using EasyCore.Redis.Service.Interceptor;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
+using System.Reflection;
 
 namespace EasyCore.Redis.Service;
 
@@ -56,7 +55,7 @@ internal sealed class ServerCacheActionFilter : IAsyncActionFilter
         }
 
         var arguments = BuildArguments(context, method.GetParameters());
-        var cacheKey = ServerCacheStandardInterceptor.BuildCacheKey(method, arguments);
+        var cacheKey = ServerCacheAspect.BuildCacheKey(method, arguments);
 
         if (await cache.KeyExistsAsync(cacheKey).ConfigureAwait(false))
         {

@@ -1,11 +1,14 @@
-using System.Reflection;
-using Castle.DynamicProxy;
+using EasyCore.Ambient;
 using EasyCore.Redis.Service.Attribute;
-using EasyCore.Redis.Service.Interceptor;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using System.Reflection;
 
 namespace EasyCore.Redis.Service;
 
@@ -16,20 +19,18 @@ public sealed class ServerCacheOptions
 {
     /// <summary>
     /// Extra assemblies to scan for types decorated with <see cref="ServerCacheAttribute"/>
-    /// (interface / class / method). When empty, candidate loaded assemblies are scanned.
+    /// for plain DI registration (no proxies). When empty, candidate loaded assemblies are scanned.
     /// </summary>
     public List<Assembly> Assemblies { get; } = new();
 }
 
 /// <summary>
-/// DI extension methods for <see cref="ServerCacheAttribute"/> via Castle DynamicProxy.
-/// Placement: interface / class / method / MVC Controller / EasyCoreAppService.
-/// Stacks with other packages' <see cref="IAsyncInterceptor"/> registrations without hardcoding them.
+/// DI extension methods for <see cref="ServerCacheAttribute"/> via AspectInjector weave.
 /// </summary>
 public static class ServerCacheExtend
 {
     /// <summary>
-    /// Registers the cache interceptor and auto-registers instrumented services.
+    /// Registers ambient DI + MVC convention and optionally registers instrumented service types.
     /// </summary>
     public static IServiceCollection AddEasyCoreRedisService(
         this IServiceCollection services,
@@ -57,15 +58,10 @@ public static class ServerCacheExtend
         foreach (var implementation in serviceTypes)
         {
             var interfaces = FindRegisterableInterfaces(implementation);
-            if (interfaces.Count == 0)
-            {
-                continue;
-            }
-
             services.TryAddTransient(implementation);
             foreach (var interfaceType in interfaces)
             {
-                services.TryAddTransient(interfaceType, sp => CreateProxy(sp, interfaceType, implementation));
+                services.TryAddTransient(interfaceType, implementation);
             }
         }
 
@@ -73,7 +69,7 @@ public static class ServerCacheExtend
     }
 
     /// <summary>
-    /// Registers a single interface/implementation pair with server-cache proxying.
+    /// Registers a single interface/implementation pair (weaving applies on the implementation).
     /// </summary>
     public static IServiceCollection AddServerCacheProxy<TInterface, TImplementation>(this IServiceCollection services)
         where TInterface : class
@@ -83,28 +79,19 @@ public static class ServerCacheExtend
 
         RegisterCore(services);
         services.TryAddTransient<TImplementation>();
-        services.TryAddTransient<TInterface>(sp =>
-            (TInterface)CreateProxy(sp, typeof(TInterface), typeof(TImplementation)));
+        services.TryAddTransient<TInterface, TImplementation>();
         return services;
     }
 
     private static void RegisterCore(IServiceCollection services)
     {
-        services.TryAddSingleton<ProxyGenerator>();
-        services.TryAddSingleton<ServerCacheStandardInterceptor>();
-        // Typed implementation so multiple packages can each TryAddEnumerable without colliding.
+        services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         services.TryAddEnumerable(
-            ServiceDescriptor.Singleton<IAsyncInterceptor, ServerCacheStandardInterceptor>());
+            ServiceDescriptor.Singleton<IHostedService, EasyCoreAmbientHostedService>());
+        services.TryAddEnumerable(
+            ServiceDescriptor.Singleton<IStartupFilter, EasyCoreAmbientStartupFilter>());
         services.TryAddEnumerable(
             ServiceDescriptor.Singleton<IConfigureOptions<MvcOptions>, ServerCacheMvcOptionsSetup>());
-    }
-
-    private static object CreateProxy(IServiceProvider sp, Type interfaceType, Type implementationType)
-    {
-        var generator = sp.GetRequiredService<ProxyGenerator>();
-        var instance = sp.GetRequiredService(implementationType);
-        var interceptors = InterceptorOrdering.Order(sp.GetServices<IAsyncInterceptor>());
-        return generator.CreateInterfaceProxyWithTarget(interfaceType, instance, interceptors);
     }
 
     private static IReadOnlyList<Type> FindRegisterableInterfaces(Type implementation)
@@ -145,14 +132,10 @@ public static class ServerCacheExtend
         void TryAdd(Assembly? assembly)
         {
             if (assembly is null || assembly.IsDynamic)
-            {
                 return;
-            }
 
             if (IsFrameworkOrInfrastructure(assembly))
-            {
                 return;
-            }
 
             result.Add(assembly);
         }
@@ -209,28 +192,40 @@ public static class ServerCacheExtend
     }
 }
 
-/// <summary>
-/// Orders stacked <see cref="IAsyncInterceptor"/> by a public <c>Order</c> property when present
-/// (lower = outer). Packages stay independent — no shared interface required.
-/// </summary>
-internal static class InterceptorOrdering
+internal sealed class EasyCoreAmbientHostedService : IHostedService
 {
-    public static IAsyncInterceptor[] Order(IEnumerable<IAsyncInterceptor> interceptors)
-        => interceptors
-            .OrderBy(GetOrder)
-            .ThenBy(i => i.GetType().FullName, StringComparer.Ordinal)
-            .ToArray();
+    private readonly IServiceProvider _root;
 
-    private static int GetOrder(IAsyncInterceptor interceptor)
+    public EasyCoreAmbientHostedService(IServiceProvider root) => _root = root;
+
+    public Task StartAsync(CancellationToken cancellationToken)
     {
-        var prop = interceptor.GetType().GetProperty(
-            "Order",
-            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-        if (prop?.PropertyType == typeof(int) && prop.GetValue(interceptor) is int order)
-        {
-            return order;
-        }
+        EasyCoreSharedAmbient.SetRoot(_root);
+        return Task.CompletedTask;
+    }
 
-        return 0;
+    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+}
+
+internal sealed class EasyCoreAmbientStartupFilter : IStartupFilter
+{
+    public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
+    {
+        return app =>
+        {
+            app.Use(async (context, nextMiddleware) =>
+            {
+                EasyCoreSharedAmbient.SetCurrent(context.RequestServices);
+                try
+                {
+                    await nextMiddleware().ConfigureAwait(false);
+                }
+                finally
+                {
+                    EasyCoreSharedAmbient.ClearCurrent();
+                }
+            });
+            next(app);
+        };
     }
 }

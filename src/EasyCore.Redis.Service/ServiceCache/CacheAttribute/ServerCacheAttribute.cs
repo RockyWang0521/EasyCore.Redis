@@ -1,3 +1,4 @@
+using AspectInjector.Broker;
 using EasyCore.Redis.Service;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.DependencyInjection;
@@ -5,14 +6,14 @@ using Microsoft.Extensions.DependencyInjection;
 namespace EasyCore.Redis.Service.Attribute;
 
 /// <summary>
-/// Marks a class, interface, method, or MVC controller / action for result caching via Castle DynamicProxy
-/// (services) or <see cref="IFilterFactory"/> (API). Placement mirrors EasyCore.Invocation style without
-/// depending on that package. Composes with other <c>IAsyncInterceptor</c> registrations via DI.
+/// Marks a class, interface, method, or MVC controller / action for result caching via AspectInjector weave
+/// (services / handlers) or <see cref="IFilterFactory"/> (API). Weave no-ops on <c>ControllerBase</c>.
 /// </summary>
 [AttributeUsage(
     AttributeTargets.Class | AttributeTargets.Method | AttributeTargets.Interface,
     Inherited = true,
     AllowMultiple = false)]
+[Injection(typeof(ServerCacheAspect))]
 public sealed class ServerCacheAttribute : System.Attribute, IFilterFactory, IOrderedFilter
 {
     /// <summary>

@@ -1,4 +1,4 @@
-using EasyCore.Redis.Service.Interceptor;
+using EasyCore.Redis.Service;
 using Xunit;
 
 namespace EasyCore.Redis.Tests;
@@ -10,9 +10,9 @@ public class ServerCacheKeyTests
     {
         var method = typeof(Sample).GetMethod(nameof(Sample.Echo))!;
 
-        var keyA = ServerCacheStandardInterceptor.BuildCacheKey(method, new object?[] { "a" });
-        var keyB = ServerCacheStandardInterceptor.BuildCacheKey(method, new object?[] { "b" });
-        var keyA2 = ServerCacheStandardInterceptor.BuildCacheKey(method, new object?[] { "a" });
+        var keyA = ServerCacheAspect.BuildCacheKey(method, new object?[] { "a" });
+        var keyB = ServerCacheAspect.BuildCacheKey(method, new object?[] { "b" });
+        var keyA2 = ServerCacheAspect.BuildCacheKey(method, new object?[] { "a" });
 
         Assert.NotEqual(keyA, keyB);
         Assert.Equal(keyA, keyA2);
@@ -23,7 +23,7 @@ public class ServerCacheKeyTests
     public void BuildCacheKey_IncludesNullArguments()
     {
         var method = typeof(Sample).GetMethod(nameof(Sample.Echo))!;
-        var key = ServerCacheStandardInterceptor.BuildCacheKey(method, new object?[] { null });
+        var key = ServerCacheAspect.BuildCacheKey(method, new object?[] { null });
         Assert.False(string.IsNullOrWhiteSpace(key));
     }
 
