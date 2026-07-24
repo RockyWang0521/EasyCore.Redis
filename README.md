@@ -1,6 +1,6 @@
 # 🔴 EasyCore.Redis
 
-> **EasyCore.Redis** 是面向 .NET 8 的生产级 Redis 工具库。基于 [StackExchange.Redis](https://stackexchange.github.io/StackExchange.Redis/)，提供**分布式缓存**（五大数据类型）、**MULTI/EXEC 事务**、**分布式锁**，以及基于 AspectInjector 织入的 `**[ServerCache]` 方法结果缓存**。
+> **EasyCore.Redis** 是面向 .NET 8 的生产级 Redis 工具库。基于 [StackExchange.Redis](https://stackexchange.github.io/StackExchange.Redis/)，提供**分布式缓存**（五大数据类型）、**MULTI/EXEC 事务**、**分布式锁**，以及基于 Castle DynamicProxy 的 `**[ServerCache]` 方法结果缓存**。
 
 ![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet)
 ![C#](https://img.shields.io/badge/C%23-12-239120?logo=csharp)
@@ -64,7 +64,7 @@ EasyCore.Redis 解决「在 ASP.NET Core 中安全、清晰地使用 Redis」的
 | 多服务争用同一连接          | 共享 `IRedisConnection` / `ConnectionMultiplexer` |
 | 键冲突 / 多环境串数据       | `DistributedName` 自动前缀隔离                        |
 | 临界区并发难控            | `IDistributedLock`（SET NX PX + Lua 校验解锁）        |
-| 方法结果重复计算           | `[ServerCache]` + AspectInjector 编译期织入                 |
+| 方法结果重复计算           | `[ServerCache]` + Castle DynamicProxy                 |
 | 批量写入要原子            | `ICacheTransaction`（MULTI/EXEC）                 |
 
 
@@ -132,7 +132,7 @@ AddEasyCoreRedis() / AddEasyCoreRedis(IConfiguration)
 | `EasyCore.Redis`             | 元包，注册缓存 + 锁 + 服务缓存        | ✅ 推荐 |
 | `EasyCore.Redis.Distributed` | 连接、`IDistributedCache`、事务 | 按需   |
 | `EasyCore.Redis.Locking`     | `IDistributedLock`        | 按需   |
-| `EasyCore.Redis.Service`     | `[ServerCache]` AspectInjector 织入 | 按需   |
+| `EasyCore.Redis.Service`     | `[ServerCache]` Castle DynamicProxy | 按需   |
 
 
 > 只装锁时需先有连接：可用 `AddEasyCoreRedisLock(configure)`，或先 `AddEasyCoreRedisDistributed` 再 `AddEasyCoreRedisLock()`。
@@ -524,15 +524,15 @@ await using var blocking = await locks.BlockingLockAsync(
 
 命名空间：`EasyCore.Redis.Service`（特性在 `EasyCore.Redis.Service.Attribute`）
 
-独立 NuGet 包（**不依赖** EasyCore.Invocation）。通过 AspectInjector 编译期织入对返回 `Task<T>` 的方法做 cache-aside（直接调用 / 反射均生效）；也可直接挂在 MVC Controller / Action（特性实现 `IFilterFactory`；Controller 上织入会跳过）。
+独立 NuGet 包（**不依赖** EasyCore.Invocation）。通过 Castle DynamicProxy 对返回 `Task<T>` 的方法做 cache-aside（经 DI 接口代理调用生效）；也可直接挂在 MVC Controller / Action（特性实现 `IFilterFactory`；Controller 不走 Castle 代理）。
 
 | 挂载位置 | 作用范围 | 机制 |
 |---|---|---|
 | 接口类型 `[ServerCache] interface IFoo` | Dynamic API / Convention→Filter | MVC |
-| 实现类 / 实现方法 | 织入后任意调用路径 | AspectInjector |
+| 实现类 / 实现方法 | DI 代理调用路径 | Castle DynamicProxy |
 | Controller / Action | API | `IFilterFactory` |
 
-与 EasyCore.Invocation 等组合时，各自织入按 Aspect/特性 `Order` 嵌套（默认 Invocation 偏外、ServerCache 约 `100`、SaveChanges 约 `200`）。不再依赖 Castle `IAsyncInterceptor` 堆叠。
+与 EasyCore.Invocation 等组合时，各自拦截器按 `Order` 堆叠（默认 Invocation 偏外、ServerCache 约 `100`、SaveChanges 约 `200`），经 `IAsyncInterceptor` / `TryAddEnumerable` 组合。
 
 解析优先级（最具体胜出）：**实现方法 → 接口方法 → 类 → 接口类型**。
 
@@ -645,7 +645,7 @@ A: 不会。请使用 `ICacheTransaction.Set(...).CommitAsync()`。
 A: 请在**实现类/方法**上标注特性（仅接口特性对非 MVC 不织入）；方法需返回 `Task<T>`；调用宿主需 `AddEasyCoreRedisService()` 以设置 ambient DI。API 场景可直接挂 Controller / Action。
 
 **Q: 能否与 EasyCore.Invocation / UnitOfWork 一起用？**  
-A: 可以。三者独立织入，按 Order 嵌套；不再使用 Castle 代理堆叠。
+A: 可以。各包 `AddEasyCore*` 用 Castle 嵌套代理叠加（后注册的包包裹先前代理）；推荐顺序：Invocation → Polly → Redis → UnitOfWork。
 
 **Q: `List*Async` / `Set*Async` 的 `params` 参数顺序？**  
 A: `CancellationToken` 在 `params` 数组之前，例如 `SetAddAsync(key, ct, "a", "b")`。

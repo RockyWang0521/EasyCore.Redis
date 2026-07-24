@@ -10,9 +10,9 @@ public class ServerCacheKeyTests
     {
         var method = typeof(Sample).GetMethod(nameof(Sample.Echo))!;
 
-        var keyA = ServerCacheAspect.BuildCacheKey(method, new object?[] { "a" });
-        var keyB = ServerCacheAspect.BuildCacheKey(method, new object?[] { "b" });
-        var keyA2 = ServerCacheAspect.BuildCacheKey(method, new object?[] { "a" });
+        var keyA = ServerCacheAsyncInterceptor.BuildCacheKey(method, new object?[] { "a" });
+        var keyB = ServerCacheAsyncInterceptor.BuildCacheKey(method, new object?[] { "b" });
+        var keyA2 = ServerCacheAsyncInterceptor.BuildCacheKey(method, new object?[] { "a" });
 
         Assert.NotEqual(keyA, keyB);
         Assert.Equal(keyA, keyA2);
@@ -23,7 +23,7 @@ public class ServerCacheKeyTests
     public void BuildCacheKey_IncludesNullArguments()
     {
         var method = typeof(Sample).GetMethod(nameof(Sample.Echo))!;
-        var key = ServerCacheAspect.BuildCacheKey(method, new object?[] { null });
+        var key = ServerCacheAsyncInterceptor.BuildCacheKey(method, new object?[] { null });
         Assert.False(string.IsNullOrWhiteSpace(key));
     }
 

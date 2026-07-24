@@ -1,12 +1,8 @@
-using EasyCore.Ambient;
 using EasyCore.Redis.Service.Attribute;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using System.Reflection;
 
@@ -19,18 +15,18 @@ public sealed class ServerCacheOptions
 {
     /// <summary>
     /// Extra assemblies to scan for types decorated with <see cref="ServerCacheAttribute"/>
-    /// for plain DI registration (no proxies). When empty, candidate loaded assemblies are scanned.
+    /// for DI registration and Castle proxy wrapping. When empty, candidate loaded assemblies are scanned.
     /// </summary>
     public List<Assembly> Assemblies { get; } = new();
 }
 
 /// <summary>
-/// DI extension methods for <see cref="ServerCacheAttribute"/> via AspectInjector weave.
+/// DI extension methods for <see cref="ServerCacheAttribute"/> via Castle DynamicProxy.
 /// </summary>
 public static class ServerCacheExtend
 {
     /// <summary>
-    /// Registers ambient DI + MVC convention and optionally registers instrumented service types.
+    /// Registers MVC convention, discovers instrumented service types, and applies Castle proxies.
     /// </summary>
     public static IServiceCollection AddEasyCoreRedisService(
         this IServiceCollection services,
@@ -65,11 +61,12 @@ public static class ServerCacheExtend
             }
         }
 
+        ServerCacheCastleProxyApplier.Apply(services);
         return services;
     }
 
     /// <summary>
-    /// Registers a single interface/implementation pair (weaving applies on the implementation).
+    /// Registers a single interface/implementation pair and applies Castle proxies.
     /// </summary>
     public static IServiceCollection AddServerCacheProxy<TInterface, TImplementation>(this IServiceCollection services)
         where TInterface : class
@@ -80,16 +77,13 @@ public static class ServerCacheExtend
         RegisterCore(services);
         services.TryAddTransient<TImplementation>();
         services.TryAddTransient<TInterface, TImplementation>();
+        ServerCacheCastleProxyApplier.Apply(services);
         return services;
     }
 
     private static void RegisterCore(IServiceCollection services)
     {
         services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-        services.TryAddEnumerable(
-            ServiceDescriptor.Singleton<IHostedService, EasyCoreAmbientHostedService>());
-        services.TryAddEnumerable(
-            ServiceDescriptor.Singleton<IStartupFilter, EasyCoreAmbientStartupFilter>());
         services.TryAddEnumerable(
             ServiceDescriptor.Singleton<IConfigureOptions<MvcOptions>, ServerCacheMvcOptionsSetup>());
     }
@@ -189,43 +183,5 @@ public static class ServerCacheExtend
         {
             return ex.Types.Where(t => t is not null)!;
         }
-    }
-}
-
-internal sealed class EasyCoreAmbientHostedService : IHostedService
-{
-    private readonly IServiceProvider _root;
-
-    public EasyCoreAmbientHostedService(IServiceProvider root) => _root = root;
-
-    public Task StartAsync(CancellationToken cancellationToken)
-    {
-        EasyCoreSharedAmbient.SetRoot(_root);
-        return Task.CompletedTask;
-    }
-
-    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
-}
-
-internal sealed class EasyCoreAmbientStartupFilter : IStartupFilter
-{
-    public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
-    {
-        return app =>
-        {
-            app.Use(async (context, nextMiddleware) =>
-            {
-                EasyCoreSharedAmbient.SetCurrent(context.RequestServices);
-                try
-                {
-                    await nextMiddleware().ConfigureAwait(false);
-                }
-                finally
-                {
-                    EasyCoreSharedAmbient.ClearCurrent();
-                }
-            });
-            next(app);
-        };
     }
 }

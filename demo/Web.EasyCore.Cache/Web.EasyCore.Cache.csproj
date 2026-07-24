@@ -7,8 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AspectInjector" Version="2.8.2" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+<PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -16,8 +15,8 @@
     <ProjectReference Include="..\..\src\EasyCore.Redis.Distributed\EasyCore.Redis.Distributed.csproj" />
     <ProjectReference Include="..\..\src\EasyCore.Redis.Locking\EasyCore.Redis.Locking.csproj" />
     <ProjectReference Include="..\..\src\EasyCore.Redis.Service\EasyCore.Redis.Service.csproj" />
+    <ProjectReference Include="..\..\..\EasyCore.EventBus\src\EasyCore.EventBus\EasyCore.EventBus.csproj" />
     <ProjectReference Include="..\..\..\EasyCore.Invocation\src\EasyCore.Invocation\EasyCore.Invocation.csproj" />
     <ProjectReference Include="..\..\..\EasyCore.Polly\src\EasyCore.Polly\EasyCore.Polly.csproj" />
   </ItemGroup>
-
 </Project>

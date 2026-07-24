@@ -1,3 +1,4 @@
+using EasyCore.EventBus;
 using EasyCore.Invocation;
 using EasyCore.Polly;
 using EasyCore.Redis;
@@ -24,7 +25,7 @@ public class Program
                 Title = "EasyCore.Redis Demo",
                 Version = "v1",
                 Description =
-                    "Placement A–F ([ServerCache] on interface / class / method / API) + Redis APIs + cross-stack.\n" +
+                    "Placement A–F ([ServerCache] on interface / class / method / API) + Redis APIs + cross-stack + EventBus+Polly.\n" +
                     "Start at GET /api/demo (need Redis localhost:6379)"
             });
         });
@@ -33,11 +34,17 @@ public class Program
         builder.Services.AddTransient<IRedisTransaction, RedisTransaction>();
         builder.Services.AddSingleton<IRedisLock, RedisLock>();
 
-        // Independent packages — interceptors stack via DI.
-        builder.Services.AddEasyCoreRedis(builder.Configuration.GetSection("EasyCore:Redis"));
-        builder.Services.AddEasyCorePolly(o => o.AddAssemblyFrom<ComboStackService>());
-        builder.Services.AddEasyCoreInvocation(o => o.AddAssemblyFrom<ComboStackService>());
+        // Register IInvocation implementations before Apply so they resolve inside the pipeline.
         builder.Services.Invocation<TraceInvocation>(ServiceLifetime.Singleton);
+
+        // EventBus first so handlers are registered before Castle Apply.
+        builder.Services.AddEasyCoreEventBus();
+
+        // Castle DynamicProxy: each AddEasyCore* applies its own interceptor (nested stack).
+        // Order: Invocation → Polly → Redis.
+        builder.Services.AddEasyCoreInvocation();
+        builder.Services.AddEasyCorePolly();
+        builder.Services.AddEasyCoreRedis(builder.Configuration.GetSection("EasyCore:Redis"));
 
         var app = builder.Build();
 

@@ -72,6 +72,14 @@ public sealed class DemoController : ControllerBase
                 name = "Cross-stack · Redis + Polly + Invocation",
                 rule = "[Trace]+[PollyConfig]+[ServerCache]",
                 routes = new[] { "GET /api/combo", "GET /api/combo/retry", "GET /api/combo/cache?key=demo" }
+            },
+            new
+            {
+                id = "J",
+                name = "EventBus + Polly",
+                rule = "[PollyConfig] on HandleAsync; AddEasyCoreEventBus then AddEasyCorePolly",
+                tip = "Watch console — first attempt throws, Polly retries",
+                routes = new[] { "POST /api/events/order-created?orderId=ORD-1" }
             }
         }
     });

@@ -3,7 +3,7 @@ using EasyCore.Redis.Service.Attribute;
 namespace Web.EasyCore.Cache.Services.Server
 {
     /// <summary>
-    /// Class-level [ServerCache] weaves all methods; one method overrides TTL.
+    /// Class-level [ServerCache] via Castle DynamicProxy; one method overrides TTL.
     /// </summary>
     [ServerCache(CacheSeconds = 120)]
     public class Server : IServer

@@ -3,7 +3,7 @@ using EasyCore.Redis.Service.Attribute;
 namespace Web.EasyCore.Cache.Services.Server
 {
     /// <summary>
-    /// Demo contract — put <see cref="ServerCacheAttribute"/> on the implementation for weave.
+    /// Demo contract — put <see cref="ServerCacheAttribute"/> on the implementation for Castle proxy.
     /// </summary>
     public interface IServer
     {

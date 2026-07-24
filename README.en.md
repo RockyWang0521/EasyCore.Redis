@@ -1,6 +1,6 @@
 # 🔴 EasyCore.Redis
 
-> **EasyCore.Redis** is a production-oriented Redis toolkit for .NET 8. Built on [StackExchange.Redis](https://stackexchange.github.io/StackExchange.Redis/), it provides **distributed cache** (five data types), **MULTI/EXEC transactions**, **distributed locks**, and AspectInjector **`[ServerCache]` method-result caching**.
+> **EasyCore.Redis** is a production-oriented Redis toolkit for .NET 8. Built on [StackExchange.Redis](https://stackexchange.github.io/StackExchange.Redis/), it provides **distributed cache** (five data types), **MULTI/EXEC transactions**, **distributed locks**, and Castle DynamicProxy **`[ServerCache]` method-result caching**.
 
 ![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet)
 ![C#](https://img.shields.io/badge/C%23-12-239120?logo=csharp)
@@ -59,7 +59,7 @@ EasyCore.Redis makes Redis safe and approachable in ASP.NET Core:
 | Multiple services fighting for connections | Shared `IRedisConnection` / `ConnectionMultiplexer` |
 | Key collisions across apps/envs | Automatic `{DistributedName}:` prefix |
 | Hard concurrent critical sections | `IDistributedLock` (SET NX PX + Lua unlock) |
-| Repeated method computation | `[ServerCache]` + AspectInjector weave |
+| Repeated method computation | `[ServerCache]` + Castle DynamicProxy |
 | Need atomic multi-write | `ICacheTransaction` (MULTI/EXEC) |
 
 ### 1.1 Design Principles
@@ -123,7 +123,7 @@ AddEasyCoreRedis() / AddEasyCoreRedis(IConfiguration)
 | `EasyCore.Redis` | Meta package: cache + lock + service cache | ✅ Recommended |
 | `EasyCore.Redis.Distributed` | Connection, `IDistributedCache`, transactions | Optional |
 | `EasyCore.Redis.Locking` | `IDistributedLock` | Optional |
-| `EasyCore.Redis.Service` | `[ServerCache]` AspectInjector weave | Optional |
+| `EasyCore.Redis.Service` | `[ServerCache]` Castle DynamicProxy | Optional |
 
 > Lock-only setups still need a connection: use `AddEasyCoreRedisLock(configure)`, or register `AddEasyCoreRedisDistributed` then `AddEasyCoreRedisLock()`.
 
@@ -486,21 +486,21 @@ await using var blocking = await locks.BlockingLockAsync(
 
 Namespace: `EasyCore.Redis.Service` (attribute in `EasyCore.Redis.Service.Attribute`)
 
-Standalone NuGet (**does not depend** on EasyCore.Invocation). AspectInjector compile-time weave provides cache-aside for `Task<T>` methods (direct / reflection); also works on MVC Controller / Action via `IFilterFactory` (weave no-ops on controllers).
+Standalone NuGet (**does not depend** on EasyCore.Invocation). Castle DynamicProxy provides cache-aside for `Task<T>` methods (via DI interface proxies); also works on MVC Controller / Action via `IFilterFactory` (controllers skip Castle proxies).
 
-Put `[ServerCache]` on the **implementation** for non-MVC paths. Compose with Invocation / UnitOfWork via aspect `Order` (no Castle `IAsyncInterceptor` stacking).
+Put `[ServerCache]` on the **implementation or interface** for non-MVC paths. Compose with Invocation / UnitOfWork via interceptor `Order` / `TryAddEnumerable(IAsyncInterceptor)`.
 
 ### 12.1 Placement
 
 | Placement | Hits | Path |
 |---|---|---|
 | Interface type | Dynamic API / Convention→Filter | MVC |
-| Implementation class / method | Any call path after weave | AspectInjector |
+| Implementation class / method | DI proxy call path | Castle DynamicProxy |
 | Controller / Action | That type or action | MVC `IFilterFactory` |
 
 Resolution (most specific wins): **impl method → interface method → class → interface type**.
 
-Compose with Invocation / UnitOfWork via aspect `Order` (Invocation outer ≈ 0, ServerCache ≈ 100, SaveChanges ≈ 200). No Castle interceptor stacking.
+Compose with Invocation / UnitOfWork via interceptor `Order` (Invocation outer ≈ 0, ServerCache ≈ 100, SaveChanges ≈ 200) and `TryAddEnumerable`.
 
 ### 12.2 Attribute
 
@@ -599,7 +599,7 @@ A: No. Use `ICacheTransaction.Set(...).CommitAsync()`.
 A: Put the attribute on the **implementation** (interface-only does not weave for non-MVC); return `Task<T>`; call `AddEasyCoreRedisService()` so ambient DI is set. For APIs, place it on Controller / Action.
 
 **Q: Can I use it with EasyCore.Invocation / UnitOfWork?**  
-A: Yes. Independent weaves nest by `Order`; no Castle proxy stacking.
+A: Yes. Each `AddEasyCore*` nests Castle proxies (later packages wrap earlier ones). Recommended order: Invocation → Polly → Redis → UnitOfWork.
 
 **Q: Parameter order for `List*Async` / `Set*Async` with `params`?**  
 A: `CancellationToken` comes before the `params` array, e.g. `SetAddAsync(key, ct, "a", "b")`.

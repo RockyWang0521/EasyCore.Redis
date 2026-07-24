@@ -55,7 +55,7 @@ internal sealed class ServerCacheActionFilter : IAsyncActionFilter
         }
 
         var arguments = BuildArguments(context, method.GetParameters());
-        var cacheKey = ServerCacheAspect.BuildCacheKey(method, arguments);
+        var cacheKey = ServerCacheAsyncInterceptor.BuildCacheKey(method, arguments);
 
         if (await cache.KeyExistsAsync(cacheKey).ConfigureAwait(false))
         {

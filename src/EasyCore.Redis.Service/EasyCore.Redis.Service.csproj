@@ -10,13 +10,15 @@
     <IncludeSymbols>False</IncludeSymbols>
     <RepositoryType>github</RepositoryType>
     <Authors>WZHY</Authors>
-    <Description>Service-level result caching via [ServerCache] (interface/class/method/API) using AspectInjector weave. Independent of EasyCore.Invocation.</Description>
+    <Description>Service-level result caching via [ServerCache] (interface/class/method/API) using Castle DynamicProxy. Independent of EasyCore.Invocation.</Description>
     <PackageProjectUrl>https://github.com/RockyWang0521/EasyCore.Redis</PackageProjectUrl>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <AssemblyVersion>8.0.0.0</AssemblyVersion>
     <FileVersion>8.0.0.0</FileVersion>
-    <Version>8.3.2</Version>
+    <Version>8.3.3</Version>
+    <NoWarn>$(NoWarn);NU5100;NU5129</NoWarn>
+    <PackageTags>redis;cache;servercache;castle;dynamicproxy;easycore</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
@@ -36,8 +38,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EasyCore.Redis.Distributed\EasyCore.Redis.Distributed.csproj" />
-    <ProjectReference Include="..\..\..\EasyCore.Ambient\src\EasyCore.Ambient\EasyCore.Ambient.csproj" />
-    <PackageReference Include="AspectInjector" Version="2.8.2" />
+    <PackageReference Include="Castle.Core.AsyncInterceptor" Version="2.1.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.0" />
