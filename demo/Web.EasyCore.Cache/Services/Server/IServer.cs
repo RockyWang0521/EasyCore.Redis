@@ -3,15 +3,12 @@ using EasyCore.Redis.Service.Attribute;
 namespace Web.EasyCore.Cache.Services.Server
 {
     /// <summary>
-    /// Demo: attribute on interface type applies to all members.
+    /// Demo contract — put <see cref="ServerCacheAttribute"/> on the implementation for weave.
     /// </summary>
-    [ServerCache(CacheSeconds = 120)]
     public interface IServer
     {
         Task<string> ServerCache();
 
-        /// <summary>Method-level attribute can override / refine interface type placement.</summary>
-        [ServerCache(CacheSeconds = 60)]
         Task<string> ServerCache(string intput);
 
         Task<string> ServerCache(int intput);

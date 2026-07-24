@@ -2,8 +2,7 @@ using EasyCore.Redis.Service.Attribute;
 
 namespace Web.EasyCore.Cache.Services.Placement;
 
-/// <summary>A — interface type: every method cached.</summary>
-[ServerCache(CacheSeconds = 60)]
+/// <summary>A — class-level [ServerCache] (weave on implementation).</summary>
 public interface ICachedUserQuery
 {
     Task<string> GetNameAsync(string id);
@@ -11,6 +10,7 @@ public interface ICachedUserQuery
     Task<string> GetStatusAsync();
 }
 
+[ServerCache(CacheSeconds = 60)]
 public sealed class CachedUserQuery : ICachedUserQuery
 {
     private int _nameHits;

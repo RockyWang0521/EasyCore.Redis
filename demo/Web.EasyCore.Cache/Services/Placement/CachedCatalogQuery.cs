@@ -2,8 +2,7 @@ using EasyCore.Redis.Service.Attribute;
 
 namespace Web.EasyCore.Cache.Services.Placement;
 
-/// <summary>E — cache only on this interface.</summary>
-[ServerCache(CacheSeconds = 60)]
+/// <summary>E — multi-interface; cache only on GetItemAsync.</summary>
 public interface ICachedCatalog
 {
     Task<string> GetItemAsync(string sku);
@@ -20,6 +19,7 @@ public sealed class CachedCatalogQuery : ICachedCatalog, IPlainCatalogQuery
     private int _itemHits;
     private int _listHits;
 
+    [ServerCache(CacheSeconds = 60)]
     public Task<string> GetItemAsync(string sku)
     {
         var n = Interlocked.Increment(ref _itemHits);

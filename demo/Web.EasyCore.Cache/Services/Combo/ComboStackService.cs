@@ -1,11 +1,20 @@
+using EasyCore.Polly;
+using EasyCore.Redis.Service.Attribute;
+using Web.EasyCore.Cache.Attributes;
+
 namespace Web.EasyCore.Cache.Services.Combo;
 
+/// <summary>
+/// Cross-package stack: [Trace] + [PollyConfig] + [ServerCache] on implementation.
+/// </summary>
+[Trace]
 public sealed class ComboStackService : IComboStackService
 {
     private int _retryAttempts;
     private int _cacheBodyHits;
     private int _stackedBodyHits;
 
+    [PollyConfig(MaxRetry = 3, RetryIntervalSeconds = 0)]
     public Task<string> GetWithRetryAsync()
     {
         _retryAttempts++;
@@ -18,6 +27,7 @@ public sealed class ComboStackService : IComboStackService
         return Task.FromResult($"retry-ok after {_retryAttempts} attempts");
     }
 
+    [ServerCache(CacheSeconds = 60)]
     public Task<string> GetCachedAsync(string key)
     {
         _cacheBodyHits++;
@@ -25,6 +35,8 @@ public sealed class ComboStackService : IComboStackService
         return Task.FromResult($"cached-value:{key}@{_cacheBodyHits}");
     }
 
+    [PollyConfig(MaxRetry = 2, RetryIntervalSeconds = 0)]
+    [ServerCache(CacheSeconds = 30)]
     public Task<string> GetStackedAsync(string key)
     {
         _stackedBodyHits++;

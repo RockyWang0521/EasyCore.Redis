@@ -1,13 +1,17 @@
+using EasyCore.Redis.Service.Attribute;
+
 namespace Web.EasyCore.Cache.Services.Server
 {
     /// <summary>
-    /// Implementation has no attributes — caching comes from <see cref="IServer"/> placement.
+    /// Class-level [ServerCache] weaves all methods; one method overrides TTL.
     /// </summary>
+    [ServerCache(CacheSeconds = 120)]
     public class Server : IServer
     {
         public Task<string> ServerCache()
             => Task.FromResult("这是ServerCache，没有参数");
 
+        [ServerCache(CacheSeconds = 60)]
         public Task<string> ServerCache(string intput)
             => Task.FromResult("这是ServerCache，有一个string类型的intput参数");
 
