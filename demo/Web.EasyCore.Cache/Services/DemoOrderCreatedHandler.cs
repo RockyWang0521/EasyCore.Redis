@@ -15,8 +15,6 @@ public sealed class DemoOrderCreatedEvent : IEvent
 /// </summary>
 public sealed class DemoOrderCreatedHandler : ILocalEventHandler<DemoOrderCreatedEvent>
 {
-    private int _attempts;
-
     [Trace]
     public Task HandleAsync(DemoOrderCreatedEvent eventMessage)
     {
