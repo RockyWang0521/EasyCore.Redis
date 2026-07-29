@@ -114,10 +114,39 @@ public static class ServerCacheExtend
         }
 
         var ns = type.Namespace ?? string.Empty;
-        return ns.StartsWith("System", StringComparison.Ordinal)
-               || ns.StartsWith("Microsoft", StringComparison.Ordinal)
-               || ns.StartsWith("Castle", StringComparison.Ordinal);
+        if (ns.StartsWith("System", StringComparison.Ordinal)
+            || ns.StartsWith("Microsoft", StringComparison.Ordinal)
+            || ns.StartsWith("Castle", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        // Quartz / Hangfire job marker interfaces.
+        // EasyCore.Quartz / EasyCore.Hangfire JobWrapper<T> resolve the concrete job type T from DI,
+        // so these interfaces must not become the preferred Castle proxy service registration.
+        if (IsJobStyleInterfaceName(type.Name))
+        {
+            return true;
+        }
+
+        return false;
     }
+
+    /// <summary>
+    /// Returns <c>true</c> when <paramref name="implementation"/> is a Quartz/Hangfire-style job
+    /// that consumers resolve as the concrete type (e.g. <c>JobWrapper&lt;T&gt;(T inner)</c>).
+    /// </summary>
+    internal static bool IsJobStyleImplementation(Type implementation)
+    {
+        ArgumentNullException.ThrowIfNull(implementation);
+        return implementation.GetInterfaces().Any(i => IsJobStyleInterfaceName(i.Name));
+    }
+
+    /// <summary>
+    /// Job interface type names recognized without taking a package reference on Quartz/Hangfire.
+    /// </summary>
+    private static bool IsJobStyleInterfaceName(string name)
+        => name is "IJob" or "IEasyCoreJob" or "IEasyCoreHangfireJob";
 
     private static IEnumerable<Assembly> GetAutoScanAssemblies()
     {
